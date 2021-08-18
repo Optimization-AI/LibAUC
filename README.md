@@ -104,7 +104,7 @@ Citation
 If you find LibAUC useful in your work, please cite the following paper for our library:
 ```
 @inproceedings{yuan2021robust,
-	title={Robust Deep AUC Maximization: A New Surrogate Loss and Empirical Studies on Medical Image Classification},
+	title={Large-scale Robust Deep AUC Maximization: A New Surrogate Loss and Empirical Studies on Medical Image Classification},
 	author={Yuan, Zhuoning and Yan, Yan and Sonka, Milan and Yang, Tianbao},
 	booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision},
 	year={2021}
