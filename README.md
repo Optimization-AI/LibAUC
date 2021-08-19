@@ -27,8 +27,8 @@ Deep AUC Maximization (DAM) is a paradigm for learning a deep neural network by 
 Links
 --------------
 -  Official Website: https://libauc.org
--  Release Notes: https://github.com/yzhuoning/LibAUC/releases
--  Repository: https://github.com/yzhuoning/libauc
+-  Release Notes: https://github.com/Optimization-AI/LibAUC/releases
+-  Repository: https://github.com/Optimization-AI/LibAUC
 
 
 Installation
