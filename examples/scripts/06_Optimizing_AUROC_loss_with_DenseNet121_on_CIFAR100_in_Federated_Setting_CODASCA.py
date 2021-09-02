@@ -1,5 +1,5 @@
 """
-Author: Zhuoning Yuan
+Authors: Zhuoning Yuan, Zhishuai Guo
 Contact: yzhuoning@gmail.com
 Reference:
     Zhuoning Yuan*, Zhishuai Guo*, Yi Xu, Yiming Ying, Tianbao Yang (equal contribution).
