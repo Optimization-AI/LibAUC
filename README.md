@@ -97,7 +97,7 @@ Usage
 
 
 
-Please visit our [website](https://libauc.org/) or [github](https://github.com/yzhuoning/libAUC) for more examples. 
+Please visit our [website](https://libauc.org/) or [github](https://github.com/Optimization-AI/LibAUC) for more examples. 
 
 Citation
 ---------
