@@ -5,23 +5,27 @@ Reference:
     Zhuoning Yuan*, Zhishuai Guo*, Yi Xu, Yiming Ying, Tianbao Yang (equal contribution).
     Federated Deep AUC Maximization for Hetergeneous Data with a Constant Communication Complexity. 
     ICML 2021: 12219-12229 
+    
+How to run the code:  
+    
+    python -m torch.distributed.launch --nproc_per_node=4 --nnodes=1 --node_rank=0 --master_addr='YOUR IP' --master_port=8888 \
+            main_codasca_cifar.py --T0=4000 --imratio=0.1 --gamma=500 --lr=0.1 --I=8 --local_batchsize=32 --total_iter=20000
+    
 """
-
 import torch
 import torch.distributed as dist
 import numpy as np
-import densenet 
 import copy 
 import os,re,time, random
 from sklearn.metrics import roc_auc_score
 import tensorflow as tf
 from libauc.models import DenseNet121
 
+
 physical_devices = tf.config.list_physical_devices('GPU')
 AUTO = tf.data.experimental.AUTOTUNE
 
 import argparse
-
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--image_size', type=int, default=32)
@@ -33,7 +37,6 @@ parser.add_argument('--ft', type=bool, default=True)  # single or mixed
 parser.add_argument('--imratio', type=float, default=0.1)
 
 parser.add_argument('--T0', type=int, default=4000)
-parser.add_argument('--use_L2', type=bool, default=True) 
 parser.add_argument('--lr', type=float, default=0.1) 
 parser.add_argument('--weight_decay', type=float, default=1e-5) 
 parser.add_argument('--gamma', type=float, default=500)
@@ -41,7 +44,6 @@ parser.add_argument('--margin', type=float, default=1.0)
 parser.add_argument('--I', type=int, default=1)
 
 parser.add_argument('--total_iter', type=int, default=20000)
-
 parser.add_argument('--local_rank', type=int, default=0)
 parser.add_argument('--master_addr', type=str)
 
@@ -336,7 +338,7 @@ def train(rank, size, group):
 
     # model & optimizer
     set_all_seeds(para.random_seed)
-    model = DenseNet121(pretrained=False, last_activation='sigmoid', num_classes=1)
+    model = DenseNet121(pretrained=True, last_activation='sigmoid', num_classes=1)
     model = model.cuda() 
     optimizer = CODASCA(imratio=para.imratio, margin=para.margin, model=model)   
 
@@ -366,7 +368,7 @@ def train(rank, size, group):
                 os.system('pkill python')
                 break
                         
-            # update paramaters
+            # decay lr 
             if i % para.T0 == 0 and i > 0:
                para.lr = para.lr/3
                optimizer.update_regularizer()
@@ -384,7 +386,7 @@ def train(rank, size, group):
             loss.backward()
             optimizer.PESG(model_c_x=model_c_x, a_c_x=a_c_x, b_c_x=b_c_x, alpha_c_y=alpha_c_y, lr=para.lr, gamma=para.gamma, clip_value=1.0, weight_decay=para.weight_decay)
     
-            # communication
+            # communicatios over all machines
             if 0 == i %(para.I):
                 if size > 1:  
                     with torch.no_grad():
@@ -393,7 +395,8 @@ def train(rank, size, group):
             if i % 100 == 0 and rank == 0:
                 model.eval()
                 with torch.no_grad():
-                    # training
+                    
+                    # training set
                     train_pred = []
                     train_true = [] 
                     for j, data in enumerate(trainloader_eval):
@@ -408,7 +411,7 @@ def train(rank, size, group):
                     train_pred = np.concatenate(train_pred)
                     train_auc =  roc_auc_score(train_true, train_pred)  
                     
-                    # testing
+                    # testing set
                     test_pred = []
                     test_true = [] 
                     for j, data in enumerate(testloader):
