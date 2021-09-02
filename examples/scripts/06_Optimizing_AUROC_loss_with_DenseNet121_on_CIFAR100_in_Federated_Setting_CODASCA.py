@@ -21,7 +21,6 @@ from sklearn.metrics import roc_auc_score
 import tensorflow as tf
 from libauc.models import DenseNet121
 
-
 physical_devices = tf.config.list_physical_devices('GPU')
 AUTO = tf.data.experimental.AUTOTUNE
 
@@ -104,8 +103,14 @@ class CODASCA:
         self.T = 0
         self.T_grad =  0
 
-    # AUC loss 
     def AUCMLoss(self, y_pred, y_true):
+        '''
+        AUC Margin Loss
+        Reference:
+            Large-scale Robust Deep AUC Maximization: A New Surrogate Loss and Empirical Studies on Medical Image Classification},
+            Yuan, Zhuoning and Yan, Yan and Sonka, Milan and Yang, Tianbao,
+            Proceedings of the IEEE/CVF International Conference on Computer Vision 2021.
+        '''
         auc_loss = (1-self.p)*torch.mean((y_pred - self.a)**2*(1==y_true).float()) + \
                     self.p*torch.mean((y_pred - self.b)**2*(-1==y_true).float())   + \
                     2*self.alpha*(self.p*(1-self.p) + \
@@ -363,12 +368,11 @@ def train(rank, size, group):
         for i, data in enumerate(trainloader):
             model.train()
             
-            # end of training
             if i == para.total_iter:
                 os.system('pkill python')
                 break
                         
-            # decay lr 
+            # decay lr & update regularizer
             if i % para.T0 == 0 and i > 0:
                para.lr = para.lr/3
                optimizer.update_regularizer()
@@ -392,11 +396,11 @@ def train(rank, size, group):
                     with torch.no_grad():
                         optimizer.update_SCAFFOLD(I=para.I, lr=para.lr, model_c_x=model_c_x, a_c_x=a_c_x, b_c_x=b_c_x, alpha_c_y=alpha_c_y) 
 
+            # evaluation
             if i % 100 == 0 and rank == 0:
                 model.eval()
                 with torch.no_grad():
                     
-                    # training set
                     train_pred = []
                     train_true = [] 
                     for j, data in enumerate(trainloader_eval):
@@ -411,7 +415,6 @@ def train(rank, size, group):
                     train_pred = np.concatenate(train_pred)
                     train_auc =  roc_auc_score(train_true, train_pred)  
                     
-                    # testing set
                     test_pred = []
                     test_true = [] 
                     for j, data in enumerate(testloader):
@@ -431,7 +434,6 @@ def train(rank, size, group):
                 if best_val_auc < val_auc:
                    best_val_auc = val_auc 
                 
-                # print results
                 line_log = ("iter: {}, train_loss: {:4f}, train_auc:{:4f}, test_auc:{:4f}, best_test_auc:{:4f},  lr:{:4f}, time:{:4f}".format(total_iter, loss.item(), train_auc, val_auc, best_val_auc, para.lr, time.time()-start_time ))          
                 print (line_log)
                 start_time = time.time()
