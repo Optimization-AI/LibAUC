@@ -46,6 +46,8 @@ Usage
 - Training with Pytorch Learning Rate Scheduling [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/04_Training_with_Pytorch_Learning_Rate_Scheduling.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
 - Optimizing <strong>AUROC</strong> loss with DenseNet121 on <strong>CheXpert</strong> [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/04_Training_with_Pytorch_Learning_Rate_Scheduling.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
 - Optimizing <strong>AUROC</strong> loss with DenseNet121 on CIFAR100 in Federated Setting (<strong>CODASCA</strong>) [[Preliminary Release](https://github.com/Optimization-AI/LibAUC/blob/main/examples/scripts/06_Optimizing_AUROC_loss_with_DenseNet121_on_CIFAR100_in_Federated_Setting_CODASCA.py)]
+- Optimizing <strong>Multi-Label AUROC</strong> loss with DenseNet121 on <strong>CheXpert</strong> [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/07_Optimizing_Multi_Label_AUROC_Loss_with_DenseNet121_on_CheXpert.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
+
 
 ### Quickstart for Beginners:
 #### Optimizing AUROC (Area Under the Receiver Operating Characteristic)
