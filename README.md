@@ -1,34 +1,42 @@
 <p align="center">
-  <img src="https://github.com/yzhuoning/LibAUC/blob/main/imgs/libauc.png" width="50%" align="center"/>
+  <img src="https://github.com/yzhuoning/LibAUC/blob/main/imgs/libauc.png" width="70%" align="center"/>
 </p>
 <p align="center">
   Logo by <a href="https://homepage.divms.uiowa.edu/~zhuoning/">Zhuoning Yuan</a>
 </p>
 
-
-<p align="center">
+**LibAUC**: A Machine Learning Library for AUC Optimization
+---
+<p align="left">
   <img alt="PyPI version" src="https://img.shields.io/pypi/v/libauc?color=blue&style=flat-square"/>
-  <img alt="PyPI LICENSE" src="https://img.shields.io/pypi/pyversions/libauc?color=blue&style=flat-square" />
-  <img alt="PyPI language" src="https://img.shields.io/github/license/yzhuoning/libauc?color=blue&logo=libauc&style=flat-square" />
+  <img alt="Python Version" src="https://img.shields.io/pypi/pyversions/libauc?color=blue&style=flat-square" />
+  <img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-1.8-yellow?color=blue&style=flat-square" />	
+  <img alt="Tensorflow" src="https://img.shields.io/badge/Tensorflow-2.0-yellow?color=blue&style=flat-square" />
+  <img alt="PyPI LICENSE" src="https://img.shields.io/github/license/yzhuoning/libauc?color=blue&logo=libauc&style=flat-square" />
 </p>
 
-LibAUC
-======
-An end-to-end machine learning library for AUC optimization (<strong>AUROC, AUPRC</strong>). 
+[**Website**](https://libauc.org/)
+| [**Updates**](https://libauc.org/news/)
+| [**Installation**](https://libauc.org/get-started/)
+| [**Tutorial**](https://github.com/Optimization-AI/LibAUC/tree/main/examples)
+| [**Research**](https://libauc.org/publications/)
+| [**Github**](https://github.com/Optimization-AI/LibAUC/)
+
+**LibAUC** aims to provide efficient solutions for optimizing AUC scores (auroc, auprc). 
 
 
 Why LibAUC?
----------------
-Deep AUC Maximization (DAM) is a paradigm for learning a deep neural network by maximizing the AUC score of the model on a dataset. There are several benefits of maximizing AUC score over minimizing the standard losses, e.g., cross-entropy.
+---
+*Deep AUC Maximization (DAM)* is a paradigm for learning a deep neural network by maximizing the AUC score of the model on a dataset. In practice, many real-world datasets are usually imbalanced and AUC score is a better metric for evaluating and comparing different methods. Directly maximizing AUC score can potentially lead to the largest improvement in the model’s performance since maximizing AUC aims to rank the prediction  score of any positive data higher than any negative data. Our library can be used in many applications, such as medical image classification and drug discovery.
 
-- In many domains, AUC score is the default metric for evaluating and comparing different methods. Directly maximizing AUC score can potentially lead to the largest improvement in the model’s performance.
-- Many real-world datasets are usually imbalanced. AUC is more suitable for handling imbalanced data distribution since maximizing AUC aims to rank the predication score of any positive data higher than any negative data
 
-Links
---------------
--  Official Website: https://libauc.org
--  Release Notes: https://github.com/Optimization-AI/LibAUC/releases
--  Repository: https://github.com/Optimization-AI/LibAUC
+
+Key Features
+---
+- **[Easy Installation]()** - Integrate *AUROC*, *AUPRC* training code with your existing pipeline in just a few steps
+- **[Large-scale Learning]()** - Handle large-scale optimization and make the training more smoothly
+- **[Distributed Training]()** - Extend to distributed setting to accelerate training efficiency and enhance data privacy
+- **[ML Benchmarks]()** - Provide easy-to-use input pipeline and benchmarks on various datasets
 
 
 Installation
@@ -57,24 +65,25 @@ Usage
 >>> from libauc.optimizers import PESG
 ...
 >>> #define loss
->>> Loss = AUCMLoss()
+>>> Loss = AUCMLoss(imratio=[YOUR NUMBER])
 >>> optimizer = PESG()
 ...
 >>> #training
 >>> model.train()    
 >>> for data, targets in trainloader:
 >>>	data, targets  = data.cuda(), targets.cuda()
-        preds = model(data)
+        logits = model(data)
+	preds = torch.sigmoid(logits)
         loss = Loss(preds, targets) 
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 ...	
 >>> #restart stage
->>> optimizer.update_regularizer()		
-
-
+>>> optimizer.update_regularizer()
 ```
+
+
 #### Optimizing AUPRC (Area Under the Precision-Recall Curve)
 ```python
 >>> #import library
@@ -89,23 +98,23 @@ Usage
 >>> model.train()    
 >>> for index, data, targets in trainloader:
 >>>	data, targets  = data.cuda(), targets.cuda()
-        preds = model(data)
+        logits = model(data)
+	preds = torch.sigmoid(logits)
         loss = Loss(preds, targets, index) 
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()	
 
 ```
-Please visit our [website](https://libauc.org/) or [github](https://github.com/Optimization-AI/LibAUC) for more examples. 
 
-
-Tips
+Useful Tips
 ---
-Please check the following list before running experiments: 
-- Compute the `imbalance_ratio` from your train set and pass it to `AUCMLoss(imratio=xxx)`
-- Choose the proper `initial learning rate` and use `optimizer.update_regularizer(decay_factor=10)` to decay learning rate
-- Use activation function e.g., `torch.sigmoid()` before passing model outputs to loss function 
-- Reshape both `preds` and `targets` to `(N, 1)` before constructing loss
+Chesklist before running experiments using LibAUC: 
+- [x] Compute the **imbalance_ratio** from your train set and pass it to `AUCMLoss(imratio=xxx)`
+- [x] Choose a proper **initial learning rate** and use `optimizer.update_regularizer(decay_factor=10)` in stagewise
+- [x] Use activation function, e.g., `torch.sigmoid()`, before passing model outputs to loss function 
+- [x] Reshape both variables **preds** and **targets** to `(N, 1)` before calling loss function
+
 
 
 Citation
