@@ -96,10 +96,17 @@ Usage
         optimizer.step()	
 
 ```
-
-
-
 Please visit our [website](https://libauc.org/) or [github](https://github.com/Optimization-AI/LibAUC) for more examples. 
+
+
+Tips
+---
+Please check the following list before running experiments: 
+- Compute the `imbalance_ratio` from your train set and pass it to `AUCMLoss(imratio=xxx)`
+- Choose the proper `initial learning rate` and use `optimizer.update_regularizer(decay_factor=10)` to decay learning rate
+- Use activation function e.g., `torch.sigmoid()` before passing model outputs to loss function 
+- Reshape both `preds` and `targets` to `(N, 1)` before constructing loss
+
 
 Citation
 ---------
