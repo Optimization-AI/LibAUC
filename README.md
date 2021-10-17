@@ -109,7 +109,7 @@ Usage
 
 Useful Tips
 ---
-Chesklist before running experiments using LibAUC: 
+Checklist before Running Experiments: 
 - [ ] Your data should have binary labels **0,1** and **1** is the **minority class** and **0** is the **majority class**
 - [ ] Compute the **imbalance_ratio** from your train set and pass it to `AUCMLoss(imratio=xxx)`
 - [ ] Choose a proper **initial learning rate** and use `optimizer.update_regularizer(decay_factor=10)` in stagewise
