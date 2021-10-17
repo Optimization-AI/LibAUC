@@ -110,11 +110,11 @@ Usage
 Useful Tips
 ---
 Chesklist before running experiments using LibAUC: 
-- [x] Compute the **imbalance_ratio** from your train set and pass it to `AUCMLoss(imratio=xxx)`
-- [x] Choose a proper **initial learning rate** and use `optimizer.update_regularizer(decay_factor=10)` in stagewise
-- [x] Use activation function, e.g., `torch.sigmoid()`, before passing model outputs to loss function 
-- [x] Reshape both variables **preds** and **targets** to `(N, 1)` before calling loss function
-
+- [ ] Your data should have binary labels **0,1** and **1** is the **minority class** and **0** is the **majority class**
+- [ ] Compute the **imbalance_ratio** from your train set and pass it to `AUCMLoss(imratio=xxx)`
+- [ ] Choose a proper **initial learning rate** and use `optimizer.update_regularizer(decay_factor=10)` in stagewise
+- [ ] Use activation function, e.g., `torch.sigmoid()`, before passing model outputs to loss function 
+- [ ] Reshape both variables **preds** and **targets** to `(N, 1)` before calling loss function
 
 
 Citation
