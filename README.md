@@ -33,10 +33,10 @@ Why LibAUC?
 
 Key Features
 ---
-- **[Easy Installation]()** - Integrate *AUROC*, *AUPRC* training code with your existing pipeline in just a few steps
-- **[Large-scale Learning]()** - Handle large-scale optimization and make the training more smoothly
-- **[Distributed Training]()** - Extend to distributed setting to accelerate training efficiency and enhance data privacy
-- **[ML Benchmarks]()** - Provide easy-to-use input pipeline and benchmarks on various datasets
+- **[Easy Installation](https://github.com/Optimization-AI/LibAUC#key-features)** - Integrate *AUROC*, *AUPRC* training code with your existing pipeline in just a few steps
+- **[Large-scale Learning](https://github.com/Optimization-AI/LibAUC#key-features)** - Handle large-scale optimization and make the training more smoothly
+- **[Distributed Training](https://github.com/Optimization-AI/LibAUC#key-features)** - Extend to distributed setting to accelerate training efficiency and enhance data privacy
+- **[ML Benchmarks](https://github.com/Optimization-AI/LibAUC#key-features)** - Provide easy-to-use input pipeline and benchmarks on various datasets
 
 
 Installation
