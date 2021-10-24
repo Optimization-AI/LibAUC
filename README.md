@@ -112,9 +112,10 @@ Useful Tips
 Checklist before Running Experiments: 
 - [ ] Your data should have binary labels **0,1** and **1** is the **minority class** and **0** is the **majority class**
 - [ ] Compute the **imbalance_ratio** from your train set and pass it to `AUCMLoss(imratio=xxx)`
-- [ ] Choose a proper **initial learning rate**, e.g., **lr=[0.1, 0.05]** usually works better
+- [ ] Adopt a proper **initial learning rate**, e.g., **lr=[0.1, 0.05]** usually works better
+- [ ] Choose `libauc.optimizers.PESG` to optimize `AUCMLoss(imratio=xxx)`
 - [ ] Use `optimizer.update_regularizer(decay_factor=10)` to update learning rate and regularizer in stagewise
-- [ ] Use activation function, e.g., `torch.sigmoid()`, before passing model outputs to loss function 
+- [ ] Add activation layer, e.g., `torch.sigmoid(logits)`, before passing model outputs to loss function 
 - [ ] Reshape both variables **preds** and **targets** to `(N, 1)` before calling loss function
 
 
