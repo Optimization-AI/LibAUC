@@ -22,13 +22,13 @@
 | [**Research**](https://libauc.org/publications/)
 | [**Github**](https://github.com/Optimization-AI/LibAUC/)
 
-**LibAUC** aims to provide efficient solutions for optimizing AUC scores (auroc, auprc). 
+**LibAUC** aims to provide efficient solutions for optimizing AUC scores (auroc, auprc). We will continuously update our library by fixing bugs and adding new materials. If you use or like our library,  please click the **star** and **fork** buttons so that you will get updates automatically. Thank you!
+
 
 
 Why LibAUC?
 ---
 *Deep AUC Maximization (DAM)* is a paradigm for learning a deep neural network by maximizing the AUC score of the model on a dataset. In practice, many real-world datasets are usually imbalanced and AUC score is a better metric for evaluating and comparing different methods. Directly maximizing AUC score can potentially lead to the largest improvement in the model’s performance since maximizing AUC aims to rank the prediction  score of any positive data higher than any negative data. Our library can be used in many applications, such as medical image classification and drug discovery.
-
 
 
 Key Features
