@@ -44,7 +44,7 @@ Installation
 ```
 $ pip install libauc
 ```
-You can download source code from [here](https://github.com/Optimization-AI/LibAUC/releases)
+You can also download source code from [here](https://github.com/Optimization-AI/LibAUC/releases)
 
 Usage
 -------
