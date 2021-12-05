@@ -22,16 +22,16 @@
 | [**Research**](https://libauc.org/publications/)
 | [**Github**](https://github.com/Optimization-AI/LibAUC/)
 
-**LibAUC** aims to provide efficient solutions for optimizing AUC scores (auroc, auprc). We will continuously update our library by fixing bugs and adding new materials. If you use or like our library,  please click the **star** and **fork** buttons so that you will get updates automatically. Thank you!
+**LibAUC** aims to provide efficient solutions for optimizing AUC scores (auroc, auprc). We will continuously update our library by fixing bugs and adding new features. If you use or like our library, please **star**:star: our repo. Thank you!
 
 
 
-Why LibAUC?
+:mag: Why LibAUC?
 ---
 *Deep AUC Maximization (DAM)* is a paradigm for learning a deep neural network by maximizing the AUC score of the model on a dataset. In practice, many real-world datasets are usually imbalanced and AUC score is a better metric for evaluating and comparing different methods. Directly maximizing AUC score can potentially lead to the largest improvement in the model’s performance since maximizing AUC aims to rank the prediction  score of any positive data higher than any negative data. Our library can be used in many applications, such as medical image classification and drug discovery.
 
 
-Key Features
+:star:Key Features
 ---
 - **[Easy Installation](https://github.com/Optimization-AI/LibAUC#key-features)** - Integrate *AUROC*, *AUPRC* training code with your existing pipeline in just a few steps
 - **[Large-scale Learning](https://github.com/Optimization-AI/LibAUC#key-features)** - Handle large-scale optimization and make the training more smoothly
@@ -39,22 +39,23 @@ Key Features
 - **[ML Benchmarks](https://github.com/Optimization-AI/LibAUC#key-features)** - Provide easy-to-use input pipeline and benchmarks on various datasets
 
 
-Installation
+:gear: Installation
 --------------
 ```
 $ pip install libauc
 ```
 You can also download source code from [here](https://github.com/Optimization-AI/LibAUC/releases)
 
-Usage
+:notebook_with_decorative_cover: Usage
 -------
 ### Official Tutorials:
 - Creating Imbalanced Benchmark Datasets [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/01_Creating_Imbalanced_Benchmark_Datasets.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
+- Training with Pytorch Learning Rate Scheduling [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/04_Training_with_Pytorch_Learning_Rate_Scheduling.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
 - Optimizing <strong>AUROC</strong> loss with ResNet20 on Imbalanced CIFAR10 [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/02_Optimizing_AUROC_with_ResNet20_on_Imbalanced_CIFAR10.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
 - Optimizing <strong>AUPRC</strong> loss with ResNet18 on Imbalanced CIFAR10 [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/03_Optimizing_AUPRC_with_ResNet18_on_Imbalanced_CIFAR10.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
-- Training with Pytorch Learning Rate Scheduling [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/04_Training_with_Pytorch_Learning_Rate_Scheduling.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
 - Optimizing <strong>AUROC</strong> loss with DenseNet121 on <strong>CheXpert</strong> [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/05_Optimizing_AUROC_Loss_with_DenseNet121_on_CheXpert.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
-- Optimizing <strong>AUROC</strong> loss with DenseNet121 on CIFAR100 in Federated Setting (<strong>CODASCA</strong>) [[Preliminary Release](https://github.com/Optimization-AI/LibAUC/blob/main/examples/scripts/06_Optimizing_AUROC_loss_with_DenseNet121_on_CIFAR100_in_Federated_Setting_CODASCA.py)]
+- Optimizing <strong>AUROC</strong> loss with DenseNet121 on CIFAR100 for **Federated Learning** [[Preliminary Release](https://github.com/Optimization-AI/LibAUC/blob/main/examples/scripts/06_Optimizing_AUROC_loss_with_DenseNet121_on_CIFAR100_in_Federated_Setting_CODASCA.py)]
+- Optimizing <strong>AUROC</strong> loss with DenseNet121 on <strong>Melanoma</strong> [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/08_Optimizing_AUROC_Loss_with_DenseNet121_on_Melanoma.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
 - Optimizing <strong>Multi-Label AUROC</strong> loss with DenseNet121 on <strong>CheXpert</strong> [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/07_Optimizing_Multi_Label_AUROC_Loss_with_DenseNet121_on_CheXpert.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
 
 
@@ -108,7 +109,7 @@ Usage
 
 ```
 
-Useful Tips
+:zap: Useful Tips
 ---
 Checklist before Running Experiments: 
 - [ ] Your data should have binary labels **0,1** and **1** is the **minority class** and **0** is the **majority class**
@@ -120,7 +121,7 @@ Checklist before Running Experiments:
 - [ ] Reshape both variables **preds** and **targets** to `(N, 1)` before calling loss function
 
 
-Citation
+:page_with_curl: Citation
 ---------
 If you find LibAUC useful in your work, please cite the following paper for our library:
 ```
@@ -132,6 +133,6 @@ If you find LibAUC useful in your work, please cite the following paper for our 
 	}
 ```
 
-Contact
+:email: Contact
 ----------
 If you have any questions, please contact us @ [Zhuoning Yuan](https://homepage.divms.uiowa.edu/~zhuoning/) [yzhuoning@gmail.com] and [Tianbao Yang](https://homepage.cs.uiowa.edu/~tyng/) [tianbao-yang@uiowa.edu] or please open a new issue in the Github . 
