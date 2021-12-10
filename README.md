@@ -22,7 +22,7 @@
 | [**Research**](https://libauc.org/publications/)
 | [**Github**](https://github.com/Optimization-AI/LibAUC/)
 
-**LibAUC** aims to provide efficient solutions for optimizing AUC scores (auroc, auprc). We will continuously update our library by fixing bugs and adding new features. If you use or like our library, please **star**:star: our repo. Thank you!
+**LibAUC** aims to provide efficient solutions for optimizing AUC scores (AUROC, AUPRC). We will continuously update our library by fixing bugs and adding new features. If you use or like our library, please **star**:star: our repo. Thank you!
 
 
 
