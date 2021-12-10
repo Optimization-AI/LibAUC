@@ -1,6 +1,7 @@
 """
 Author: Zhuoning Yuan, Qi Qi
 Contact: yzhuoning@gmail.com, qi-qi@uiowa.edu
+For more examples, please check Qi's repo: https://github.com/Optimization-AI/NeurIPS2021_SOAP
 """
 from libauc.losses import APLoss_SH
 from libauc.optimizers import SOAP_SGD
