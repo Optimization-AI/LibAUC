@@ -44,12 +44,12 @@
 ```
 $ pip install libauc
 ```
-You can also download source code from [here](https://github.com/Optimization-AI/LibAUC/releases)
+You can also download source code from [here](https://github.com/Optimization-AI/LibAUC/releases).
 
 :notebook_with_decorative_cover: Usage
 -------
 ### Official Tutorials:
-- Creating Imbalanced Benchmark Datasets [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/01_Creating_Imbalanced_Benchmark_Datasets.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
+- Creating Imbalanced Benchmark Datasets on **CIFAR10, CIFAR100, CATvsDOG, STL10** [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/01_Creating_Imbalanced_Benchmark_Datasets.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
 - Training with Pytorch Learning Rate Scheduling [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/04_Training_with_Pytorch_Learning_Rate_Scheduling.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
 - Optimizing <strong>AUROC</strong> loss with ResNet20 on Imbalanced CIFAR10 [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/02_Optimizing_AUROC_with_ResNet20_on_Imbalanced_CIFAR10.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
 - Optimizing <strong>AUPRC</strong> loss with ResNet18 on Imbalanced CIFAR10 [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/03_Optimizing_AUPRC_with_ResNet18_on_Imbalanced_CIFAR10.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
@@ -111,14 +111,13 @@ You can also download source code from [here](https://github.com/Optimization-AI
 
 :zap: Useful Tips
 ---
-Checklist before Running Experiments: 
-- [ ] Your data should have binary labels **0,1** and **1** is the **minority class** and **0** is the **majority class**
-- [ ] Compute the **imbalance_ratio** from your train set and pass it to `AUCMLoss(imratio=xxx)`
-- [ ] Adopt a proper **initial learning rate**, e.g., **lr=[0.1, 0.05]** usually works better
+- [ ] Your dataset should have **0,1** labels, e.g., **1** is the **minority class** and **0** is the **majority class**
+- [ ] Compute `imratio=#pos/#total` based on training set and pass it to `AUCMLoss(imratio=xxx)`
+- [ ] Adopt a proper `initial learning rate`, e.g., `lr=[0.1, 0.05]` usually works better
 - [ ] Choose `libauc.optimizers.PESG` to optimize `AUCMLoss(imratio=xxx)`
 - [ ] Use `optimizer.update_regularizer(decay_factor=10)` to update learning rate and regularizer in stagewise
 - [ ] Add activation layer, e.g., `torch.sigmoid(logits)`, before passing model outputs to loss function 
-- [ ] Reshape both variables **preds** and **targets** to `(N, 1)` before calling loss function
+- [ ] Reshape both variables `y_preds` and `y_targets` to `(N, 1)` before calling loss function
 
 
 :page_with_curl: Citation
