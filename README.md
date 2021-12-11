@@ -122,7 +122,7 @@ You can also download source code from [here](https://github.com/Optimization-AI
 
 :page_with_curl: Citation
 ---------
-If you find LibAUC useful in your work, please cite the following paper for our library:
+If you find LibAUC useful in your work, please acknowledge our library or cite the following paper:
 ```
 @inproceedings{yuan2021robust,
 	title={Large-scale Robust Deep AUC Maximization: A New Surrogate Loss and Empirical Studies on Medical Image Classification},
