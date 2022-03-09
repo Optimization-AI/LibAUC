@@ -83,7 +83,7 @@ total_epochs = 200
 SEED = 123
 dataset = 'C2' # choose dataset to use
 imratio = 0.1
-BATCH_SIZE = 128
+BATCH_SIZE = 64
 
 # tunable paramaters
 margin = 1.0
