@@ -48,14 +48,16 @@ You can also download source code from [here](https://github.com/Optimization-AI
 :notebook_with_decorative_cover: Usage
 -------
 ### Official Tutorials:
-- Constructing Imbalanced Datasets for **CIFAR10, CIFAR100, CATvsDOG, STL10** [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/01_Creating_Imbalanced_Benchmark_Datasets.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
+- Constructing Imbalanced datasets for **CIFAR10, CIFAR100, CATvsDOG, STL10** [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/01_Creating_Imbalanced_Benchmark_Datasets.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
 - Training with Pytorch Learning Rate Scheduling [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/04_Training_with_Pytorch_Learning_Rate_Scheduling.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
 - Optimizing <strong>AUROC</strong> loss with ResNet20 on Imbalanced CIFAR10 [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/02_Optimizing_AUROC_with_ResNet20_on_Imbalanced_CIFAR10.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
 - Optimizing <strong>AUPRC</strong> loss with ResNet18 on Imbalanced CIFAR10 [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/03_Optimizing_AUPRC_with_ResNet18_on_Imbalanced_CIFAR10.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
 - Optimizing <strong>AUROC</strong> loss with DenseNet121 on <strong>CheXpert</strong> [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/05_Optimizing_AUROC_Loss_with_DenseNet121_on_CheXpert.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
-- Optimizing <strong>AUROC</strong> loss with DenseNet121 on CIFAR100 for **Federated Learning** [[Preliminary Release](https://github.com/Optimization-AI/LibAUC/blob/main/examples/scripts/06_Optimizing_AUROC_loss_with_DenseNet121_on_CIFAR100_in_Federated_Setting_CODASCA.py)]
+- Optimizing <strong>AUROC</strong> loss with DenseNet121 for **Federated Learning** [[Preliminary Release](https://github.com/Optimization-AI/LibAUC/blob/main/examples/scripts/06_Optimizing_AUROC_loss_with_DenseNet121_on_CIFAR100_in_Federated_Setting_CODASCA.py)]
 - Optimizing <strong>AUROC</strong> loss with DenseNet121 on <strong>Melanoma</strong> [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/08_Optimizing_AUROC_Loss_with_DenseNet121_on_Melanoma.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
 - Optimizing <strong>AUROC (Multi-Label)</strong> loss with DenseNet121 on <strong>CheXpert</strong> [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/07_Optimizing_Multi_Label_AUROC_Loss_with_DenseNet121_on_CheXpert.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
+- Optimizing <strong>AUROC</strong> loss with ResNet20 for <strong>Compositional Training</strong> [[Notebook](https://github.com/Optimization-AI/LibAUC/blob/main/examples/09_Optimizing_CompositionalAUC_Loss_with_ResNet20_on_CIFAR10.ipynb)][[Script](https://github.com/Optimization-AI/LibAUC/tree/main/examples/scripts)]
+
 
 
 ### Quickstart for Beginners:
@@ -88,12 +90,12 @@ You can also download source code from [here](https://github.com/Optimization-AI
 #### Optimizing AUPRC (Area Under the Precision-Recall Curve)
 ```python
 >>> #import library
->>> from libauc.losses import APLoss_SH
->>> from libauc.optimizers import SOAP_SGD, SOAP_ADAM
+>>> from libauc.losses import APLoss
+>>> from libauc.optimizers import SOAP
 ...
 >>> #define loss
->>> Loss = APLoss_SH()
->>> optimizer = SOAP_ADAM()
+>>> Loss = APLoss()
+>>> optimizer = SOAP()
 ...
 >>> #training
 >>> model.train()    
@@ -110,13 +112,13 @@ You can also download source code from [here](https://github.com/Optimization-AI
 
 :zap: Useful Tips
 ---
-- [ ] Your dataset should have **0,1** labels, e.g., **1** is the **minority class** and **0** is the **majority class**
-- [ ] Compute `imratio=#pos/#total` based on training set and pass it to `AUCMLoss(imratio=xxx)`
-- [ ] Adopt a proper `initial learning rate`, e.g., `lr=[0.1, 0.05]` usually works better
-- [ ] Choose `libauc.optimizers.PESG` to optimize `AUCMLoss(imratio=xxx)`
-- [ ] Use `optimizer.update_regularizer(decay_factor=10)` to update learning rate and regularizer in stagewise
-- [ ] Add activation layer, e.g., `torch.sigmoid(logits)`, before passing model outputs to loss function 
-- [ ] Reshape both variables `y_preds` and `y_targets` to `(N, 1)` before calling loss function
+- Your dataset should have **0,1** labels, e.g., **1** is the **minority class** and **0** is the **majority class**
+- Compute `imratio=#pos/#total` based on training set and pass it to `AUCMLoss(imratio=xxx)`
+- Adopt a proper `initial learning rate`, e.g., `lr=[0.1, 0.05]` usually works better
+- Choose `libauc.optimizers.PESG` to optimize `AUCMLoss(imratio=xxx)`
+- Use `optimizer.update_regularizer(decay_factor=10)` to update learning rate and regularizer in stagewise
+- Add activation layer, e.g., `torch.sigmoid(logits)`, before passing model outputs to loss function 
+- Reshape both variables `y_preds` and `y_targets` to `(N, 1)` before calling loss function
 
 
 :page_with_curl: Citation
