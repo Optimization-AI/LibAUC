@@ -43,7 +43,7 @@
 ```
 $ pip install libauc
 ```
-You can also download source code from [here](https://github.com/Optimization-AI/LibAUC/releases).
+To use latest beta version, you can try `$ pip install libauc==1.1.9rc1`. You can also download source code from [here](https://github.com/Optimization-AI/LibAUC/releases).
 
 :notebook_with_decorative_cover: Usage
 -------
