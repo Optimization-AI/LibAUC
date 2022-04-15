@@ -8,11 +8,13 @@
 **LibAUC**: A Machine Learning Library for AUC Optimization
 ---
 <p align="left">
-  <img alt="PyPI version" src="https://img.shields.io/pypi/v/libauc?color=blue&style=flat-square"/>
-  <img alt="Python Version" src="https://img.shields.io/pypi/pyversions/libauc?color=blue&style=flat-square" />
-  <img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-1.8-yellow?color=blue&style=flat-square" />	
-  <img alt="PyPI LICENSE" src="https://img.shields.io/github/license/yzhuoning/libauc?color=blue&logo=libauc&style=flat-square" />
+  <img alt="PyPI version" src="https://img.shields.io/pypi/v/libauc?color=blue&style=flat"/>
+  <img alt="PyPI version" src="https://static.pepy.tech/personalized-badge/libauc?period=total&units=abbreviation&left_color=grey&right_color=blue&left_text=Downloads"/>
+  <img alt="Python Version" src="https://img.shields.io/pypi/pyversions/libauc?color=blue&style=flat" />
+  <img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-1.8-yellow?color=blue&style=flat" />	
+  <img alt="PyPI LICENSE" src="https://img.shields.io/github/license/yzhuoning/libauc?color=blue&logo=libauc&style=flat" />	
 </p>
+
 
 [**Website**](https://libauc.org/)
 | [**Updates**](https://libauc.org/news/)
