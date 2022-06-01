@@ -27,7 +27,7 @@
 
 What's New
 ---
-- **2022-06**: We are working a major release of new features for LibAUC. Code & tutorials are coming soon!
+- **2022-06**: We are working a major release of new features for LibAUC. Code & tutorials will be available soon!
 
 :mag: Why LibAUC?
 ---
