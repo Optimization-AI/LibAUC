@@ -38,7 +38,7 @@ X-risk refers to a family of compositional measures/losses, in which each data p
 ---
 - **[Easy Installation](https://github.com/Optimization-AI/LibAUC#key-features)** - Easy to install and insert LibAUC code into existing training pipeline with Deep Learning frameworks like PyTorch.
 - **[Broad Applications](https://github.com/Optimization-AI/LibAUC#key-features)** - Users can learn different neural network structures (e.g., MLP, CNN, GNN, transformer, etc) that support their data types.
-- **[Efficient Algorithms](https://github.com/Optimization-AI/LibAUC#key-features)** - Stochastic algorithms with provable theoretical convergence that support learning with millions of data points.
+- **[Efficient Algorithms](https://github.com/Optimization-AI/LibAUC#key-features)** - Stochastic algorithms with provable theoretical convergence that support learning with millions of data points without larger batch size.
 - **[Hands-on Tutorials](https://github.com/Optimization-AI/LibAUC#key-features)** - Hands-on tutorials are provided for optimizing a variety of measures and objectives belonging to the family of X-risks.
 
 
@@ -47,7 +47,7 @@ X-risk refers to a family of compositional measures/losses, in which each data p
 ```
 $ pip install libauc==1.2.0rc0
 ```
-The latest version will be updated soon! You can also download source code for previous version [here](https://github.com/Optimization-AI/LibAUC/releases). 
+The latest version `1.2.0rc0` will be updated soon! You can also download source code for previous version [here](https://github.com/Optimization-AI/LibAUC/releases). 
 
 
 :clipboard: Usage
