@@ -88,7 +88,7 @@ The latest version `1.2.0rc0` will be updated soon! You can also download source
 - **SogCLR**: [Optimizing contrastive loss using small batch size on ImageNet-1K](https://github.com/Optimization-AI/SogCLR)
 
 ### Applications
-- [A Tutorial of Imbalanced Data Sampler]()
+- [A Tutorial of Imbalanced Data Sampler](https://github.com/Optimization-AI/LibAUC/blob/main/examples/placeholder.md)
 - [Constructing benchmark imbalanced datasets for CIFAR10, CIFAR100, CATvsDOG, STL10](https://github.com/Optimization-AI/LibAUC/blob/main/examples/01_Creating_Imbalanced_Benchmark_Datasets.ipynb)
 - [Using LibAUC with PyTorch learning rate scheduler](https://github.com/Optimization-AI/LibAUC/blob/main/examples/04_Training_with_Pytorch_Learning_Rate_Scheduling.ipynb)
 - [Optimizing AUROC loss on Chest X-Ray dataset (CheXpert)](https://github.com/Optimization-AI/LibAUC/blob/main/examples/05_Optimizing_AUROC_Loss_with_DenseNet121_on_CheXpert.ipynb)
