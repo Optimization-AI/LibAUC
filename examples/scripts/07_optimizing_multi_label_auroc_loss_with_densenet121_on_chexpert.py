@@ -1,12 +1,34 @@
 """
-Authors: Zhuoning Yuan
-Contact: yzhuoning@gmail.com
+# Optimizing Multi-label AUROC loss on Chest X-Ray Dataset (CheXpert)
+
+Author: Zhuoning Yuan
+
+Reference:  
+
+If you find this tutorial helpful in your work,  please acknowledge our library and cite the following paper:
+
+@inproceedings{yuan2021large,
+  title={Large-scale robust deep auc maximization: A new surrogate loss and empirical studies on medical image classification},
+  author={Yuan, Zhuoning and Yan, Yan and Sonka, Milan and Yang, Tianbao},
+  booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision},
+  pages={3040--3049},
+  year={2021}
+}
+
+@misc{libauc2022,
+      title={LibAUC: A Deep Learning Library for X-Risk Optimization.},
+      author={Zhuoning Yuan, Zi-Hao Qiu, Gang Li, Dixian Zhu, Zhishuai Guo, Quanqi Hu, Bokun Wang, Qi Qi, Yongjian Zhong, Tianbao Yang},
+      year={2022}
+    }
+
 """
+
 
 from libauc.losses import AUCM_MultiLabel, CrossEntropyLoss
 from libauc.optimizers import PESG, Adam
-from libauc.models import DenseNet121, DenseNet169
+from libauc.models import densenet121 as DenseNet121
 from libauc.datasets import CheXpert
+from libauc.metrics import auc_roc_score # for multi-task
 
 import torch 
 from PIL import Image
@@ -24,9 +46,6 @@ def set_all_seeds(SEED):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
-"""# **Multi-Label Training**
-* Optimizing Multi-Label AUC (5 tasks)   
-"""
 
 # dataloader
 root = './CheXpert/CheXpert-v1.0-small/'
@@ -36,13 +55,14 @@ testSet =  CheXpert(csv_path=root+'valid.csv',  image_root_path=root, use_upsamp
 trainloader =  torch.utils.data.DataLoader(traindSet, batch_size=32, num_workers=2, shuffle=True)
 testloader =  torch.utils.data.DataLoader(testSet, batch_size=32, num_workers=2, shuffle=False)
 
+# check imbalance ratio for each task
+print (traindSet.imratio_list )
+
 # paramaters
 SEED = 123
 BATCH_SIZE = 32
- 
 lr = 0.1 
 gamma = 500
-imratio = traindSet.imratio_list 
 weight_decay = 1e-5
 margin = 1.0
 
@@ -52,7 +72,7 @@ model = DenseNet121(pretrained=True, last_activation=None, activations='relu', n
 model = model.cuda()
 
 # define loss & optimizer
-Loss = AUCM_MultiLabel(imratio=imratio, num_classes=5)
+Loss = AUCM_MultiLabel(num_classes=5)
 optimizer = PESG(model, 
                  a=Loss.a, 
                  b=Loss.b, 
@@ -62,12 +82,13 @@ optimizer = PESG(model,
                  margin=margin, 
                  weight_decay=weight_decay, device='cuda')
 
-
 # training
 best_val_auc = 0 
 for epoch in range(2):
+  
     if epoch > 0:
-        optimizer.update_regularizer(decay_factor=10)       
+        optimizer.update_regularizer(decay_factor=10)    
+
     for idx, data in enumerate(trainloader):
       train_data, train_labels = data
       train_data, train_labels  = train_data.cuda(), train_labels.cuda()
@@ -102,3 +123,7 @@ for epoch in range(2):
                  torch.save(model.state_dict(), 'aucm_multi_label_pretrained_model.pth')
 
               print ('Epoch=%s, BatchID=%s, Val_AUC=%.4f, Best_Val_AUC=%.4f'%(epoch, idx, val_auc_mean, best_val_auc))
+
+
+# show auc roc scores for each task 
+auc_roc_score(test_true, test_pred)
