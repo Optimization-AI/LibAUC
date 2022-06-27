@@ -47,7 +47,7 @@ X-risk refers to a family of compositional measures/losses, in which each data p
 ```
 $ pip install libauc==1.1.9rc3
 ```
-The latest version `1.1.9rc3` is available now! You can also download source code for previous version [here](https://github.com/Optimization-AI/LibAUC/releases). 
+The latest version **`1.1.9rc3`** is available now! You can also download source code for previous version [here](https://github.com/Optimization-AI/LibAUC/releases). 
 
 
 :clipboard: Usage
