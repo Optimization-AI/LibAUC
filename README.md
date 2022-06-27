@@ -45,9 +45,9 @@ X-risk refers to a family of compositional measures/losses, in which each data p
 :gear: Installation
 --------------
 ```
-$ pip install libauc==1.2.0rc0
+$ pip install libauc==1.1.9rc3
 ```
-The latest version `1.2.0rc0` will be updated soon! You can also download source code for previous version [here](https://github.com/Optimization-AI/LibAUC/releases). 
+The latest version `1.1.9rc3` is available now! You can also download source code for previous version [here](https://github.com/Optimization-AI/LibAUC/releases). 
 
 
 :clipboard: Usage
@@ -82,20 +82,20 @@ The latest version `1.2.0rc0` will be updated soon! You can also download source
 ### X-Risk
 - **AUROC**: [Optimizing AUROC loss on imbalanced dataset](https://github.com/Optimization-AI/LibAUC/blob/main/examples/02_Optimizing_AUROC_with_ResNet20_on_Imbalanced_CIFAR10.ipynb)
 - **AUPRC**: [Optimizing AUPRC loss on imbalanced dataset](https://github.com/Optimization-AI/LibAUC/blob/main/examples/03_Optimizing_AUPRC_with_ResNet18_on_Imbalanced_CIFAR10.ipynb)
-- **Partial AUROC**: [Optimizing Partial AUC loss on imbalanced dataset](https://github.com/Optimization-AI/LibAUC/blob/main/examples/placeholder.md)
+- **Partial AUROC**: [Optimizing Partial AUC loss on imbalanced dataset](https://github.com/Optimization-AI/LibAUC/blob/main/examples/placeholder.md) (Available soon)
 - **Compositional AUROC**: [Optimizing Compositional AUROC loss on imbalanced dataset](https://github.com/Optimization-AI/LibAUC/blob/main/examples/09_Optimizing_CompositionalAUC_Loss_with_ResNet20_on_CIFAR10.ipynb)
-- **NDCG**: [Optimizing NDCG loss on MovieLens 20M](https://github.com/Optimization-AI/LibAUC/blob/main/examples/placeholder.md)
+- **NDCG**: [Optimizing NDCG loss on MovieLens 20M](https://github.com/Optimization-AI/LibAUC/blob/main/examples/10_Optimizing_NDCG_Loss_on_MovieLens20M.ipynb) 
 - **SogCLR**: [Optimizing contrastive loss using small batch size on ImageNet-1K](https://github.com/Optimization-AI/SogCLR)
 
 ### Applications
-- [A Tutorial of Imbalanced Data Sampler](https://github.com/Optimization-AI/LibAUC/blob/main/examples/placeholder.md)
+- [A Tutorial of Imbalanced Data Sampler](https://github.com/Optimization-AI/LibAUC/blob/main/examples/placeholder.md) (Available soon)
 - [Constructing benchmark imbalanced datasets for CIFAR10, CIFAR100, CATvsDOG, STL10](https://github.com/Optimization-AI/LibAUC/blob/main/examples/01_Creating_Imbalanced_Benchmark_Datasets.ipynb)
 - [Using LibAUC with PyTorch learning rate scheduler](https://github.com/Optimization-AI/LibAUC/blob/main/examples/04_Training_with_Pytorch_Learning_Rate_Scheduling.ipynb)
 - [Optimizing AUROC loss on Chest X-Ray dataset (CheXpert)](https://github.com/Optimization-AI/LibAUC/blob/main/examples/05_Optimizing_AUROC_Loss_with_DenseNet121_on_CheXpert.ipynb)
 - [Optimizing AUROC loss on Skin Cancer dataset (Melanoma)](https://github.com/Optimization-AI/LibAUC/blob/main/examples/08_Optimizing_AUROC_Loss_with_DenseNet121_on_Melanoma.ipynb)
 - [Optimizing AUROC loss on Molecular Graph dataset (OGB-Molhiv)](https://github.com/yzhuoning/DeepAUC_OGB_Challenge)
 - [Optimizing multi-task AUROC loss on Chest X-Ray dataset (CheXpert)](https://github.com/Optimization-AI/LibAUC/blob/main/examples/07_Optimizing_Multi_Label_AUROC_Loss_with_DenseNet121_on_CheXpert.ipynb)
-- [Optimizing AUROC loss on Tabular dataset (Credit Fraud)](https://github.com/Optimization-AI/LibAUC/blob/main/examples/placeholder.md) 
+- [Optimizing AUROC loss on Tabular dataset (Credit Fraud)](https://github.com/Optimization-AI/LibAUC/blob/main/examples/placeholder.md)(Available soon) 
 - [Optimizing AUROC loss for Federated Learning](https://github.com/Optimization-AI/LibAUC/blob/main/examples/scripts/06_Optimizing_AUROC_loss_with_DenseNet121_on_CIFAR100_in_Federated_Setting_CODASCA.py)
 
 
