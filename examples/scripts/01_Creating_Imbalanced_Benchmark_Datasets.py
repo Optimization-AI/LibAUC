@@ -4,31 +4,39 @@ Contact: yzhuoning@gmail.com
 """
 
 from libauc.datasets import CIFAR10
-(train_data, train_label), (test_data, test_label) = CIFAR10()
+(train_data, train_label) = CIFAR10(root='./data', train=True) 
+(test_data, test_label) = CIFAR10(root='./data', train=False) 
 
 from libauc.datasets import CIFAR100
-(train_data, train_label), (test_data, test_label) = CIFAR100()
+(train_data, train_label) = CIFAR100(root='./data', train=True) 
+(test_data, test_label) = CIFAR100(root='./data', train=False) 
 
 from libauc.datasets import CAT_VS_DOG
-(train_data, train_label), (test_data, test_label) = CAT_VS_DOG()
+(train_data, train_label) = CAT_VS_DOG('./data/', train=True)
+(test_data, test_label) = CAT_VS_DOG('./data/', train=False)
 
 from libauc.datasets import STL10
-(train_data, train_label), (test_data, test_label) = STL10()
+(train_data, train_label) = STL10(root='./data/', split='train') # return numpy array
+(test_data, test_label) = STL10(root='./data/', split='test') # return numpy array
 
-from libauc.datasets import imbalance_generator 
+from libauc.utils import ImbalancedDataGenerator
 
 SEED = 123
 imratio = 0.1 # postive_samples/(total_samples)
 
 from libauc.datasets import CIFAR10
-(train_data, train_label), (test_data, test_label) = CIFAR10()
-(train_images, train_labels) = imbalance_generator(train_data, train_label, imratio=imratio, shuffle=True, random_seed=SEED)
-(test_images, test_labels) = imbalance_generator(test_data, test_label, is_balanced=True, random_seed=SEED)
+(train_data, train_label) = CIFAR10(root='./data', train=True) 
+(test_data, test_label) = CIFAR10(root='./data', train=False) 
+g = ImbalancedDataGenerator(verbose=True, random_seed=0)
+(train_images, train_labels) = g.transform(train_data, train_label, imratio=imratio)
+(test_images, test_labels) = g.transform(test_data, test_label, imratio=0.5) 
+
 
 import torch
 from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as transforms
 import numpy as np
+from PIL import Image
 
 class ImageDataset(Dataset):
     def __init__(self, images, targets, image_size=32, crop_size=30, mode='train'):
