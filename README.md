@@ -45,9 +45,9 @@ X-risk refers to a family of compositional measures/losses, in which each data p
 :gear: Installation
 --------------
 ```
-$ pip install libauc==1.1.9rc3
+$ pip install libauc==1.1.9rc4
 ```
-The latest version **`1.1.9rc3`** is available now! You can also download source code for previous version [here](https://github.com/Optimization-AI/LibAUC/releases). 
+The latest version **`1.1.9rc4`** is available now! You can also download source code for previous version [here](https://github.com/Optimization-AI/LibAUC/releases). 
 
 
 :clipboard: Usage
@@ -82,7 +82,7 @@ The latest version **`1.1.9rc3`** is available now! You can also download source
 ### X-Risk
 - **AUROC**: [Optimizing AUROC loss on imbalanced dataset](https://github.com/Optimization-AI/LibAUC/blob/main/examples/02_Optimizing_AUROC_with_ResNet20_on_Imbalanced_CIFAR10.ipynb)
 - **AUPRC**: [Optimizing AUPRC loss on imbalanced dataset](https://github.com/Optimization-AI/LibAUC/blob/main/examples/03_Optimizing_AUPRC_with_ResNet18_on_Imbalanced_CIFAR10.ipynb) (Available soon)
-- **Partial AUROC**: [Optimizing Partial AUC loss on imbalanced dataset](https://github.com/Optimization-AI/LibAUC/blob/main/examples/placeholder.md) (Available soon)
+- **Partial AUROC**: [Optimizing Partial AUC loss on imbalanced dataset](https://github.com/Optimization-AI/LibAUC/blob/main/examples/11_Optimizing_pAUC_Loss_on_Imbalanced_data_wrapper.ipynb)
 - **Compositional AUROC**: [Optimizing Compositional AUROC loss on imbalanced dataset](https://github.com/Optimization-AI/LibAUC/blob/main/examples/09_Optimizing_CompositionalAUC_Loss_with_ResNet20_on_CIFAR10.ipynb)
 - **NDCG**: [Optimizing NDCG loss on MovieLens 20M](https://github.com/Optimization-AI/LibAUC/blob/main/examples/10_Optimizing_NDCG_Loss_on_MovieLens20M.ipynb) 
 - **SogCLR**: [Optimizing Contrastive Loss using small batch size on ImageNet-1K](https://github.com/Optimization-AI/SogCLR)
