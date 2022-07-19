@@ -101,21 +101,7 @@ The latest version **`1.1.9rc4`** is available now! You can also download source
 
 :page_with_curl: Citation
 ---------
-If you find LibAUC useful in your work, please acknowledge our library and cite the following papers:
-```
-@misc{libauc2022,
-      title={LibAUC: A Deep Learning Library for X-Risk Optimization.},
-      author={Zhuoning Yuan, Zi-Hao Qiu, Gang Li, Dixian Zhu, Zhishuai Guo, Quanqi Hu, Bokun Wang, Qi Qi, Yongjian Zhong, Tianbao Yang},
-      year={2022}
-	}
-```
-```
-@article{dox22,
-	title={Algorithmic Foundation of Deep X-risk Optimization},
-	author={Tianbao Yang},
-	journal={CoRR},
-	year={2022}
-```
+If you find LibAUC useful in your work, please acknowledge our library and cite the papers in [BibTex](https://github.com/Optimization-AI/LibAUC/blob/main/citations.bib).
 
 :email: Contact
 ----------
