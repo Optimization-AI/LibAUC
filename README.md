@@ -27,7 +27,7 @@ We continuously update our library by making improvements and adding new feature
 
 :mag: What is X-Risks?
 ---
-X-risk refers to a family of compositional measures/losses, in which each data point is compared with a set of data points explicitly or implicitly for defining a risk function. It covers a family of widely used measures/losses, which can be organized into four interconnected categories:
+X-risk refers to a family of compositional measures/losses, in which each data point is compared with a set of data points explicitly or implicitly for defining a risk function. It covers a family of widely used measures/losses including but not limited to the following four interconnected categories:
 - **[Areas under the curves]()**, including areas under ROC curves (AUROC), areas under Precision-Recall curves (AUPRC), one-way and two-wary partial areas under ROC curves.
 - **[Ranking measures/objectives]()**, including p-norm push for bipartite ranking, listwise losses for learning to rank (e.g., listNet), mean average precision (mAP), normalized discounted cumulative gain (NDCG), etc.
 - **[Performance at the top]()**, including top push, top-K variants of mAP and NDCG, Recall at top K positions (Rec@K), Precision at a certain Recall level (Prec@Rec), etc.
