@@ -25,7 +25,13 @@
 
 We continuously update our library by making improvements and adding new features. If you use or like our library, please **star**:star: this repo. Thank you!
 
-:mag: What is X-Risks?
+
+:calendar: News
+---
+- **2022/7**: LibAUC **1.2.0** is released! This version includes performance improvements as well as many new features added. Please check [release note](https://github.com/Optimization-AI/LibAUC/releases/tag/v1.2.0) for more details! Thanks!
+
+
+:mag: What is X-Risk?
 ---
 X-risk refers to a family of compositional measures/losses, in which each data point is compared with a set of data points explicitly or implicitly for defining a risk function. It covers a family of widely used measures/losses including but not limited to the following four interconnected categories:
 - **[Areas under the curves]()**, including areas under ROC curves (AUROC), areas under Precision-Recall curves (AUPRC), one-way and two-wary partial areas under ROC curves.
@@ -47,7 +53,7 @@ X-risk refers to a family of compositional measures/losses, in which each data p
 ```
 $ pip install libauc==1.2.0
 ```
-The latest version **`1.2.0`** is available now! You can also download source code for previous version [here](https://github.com/Optimization-AI/LibAUC/releases). 
+The latest version **`1.2.0`** is available now! You can check [release note](https://github.com/Optimization-AI/LibAUC/releases/tag/v1.2.0) for more details. Source code is available for download [here](https://github.com/Optimization-AI/LibAUC/releases). 
 
 
 :clipboard: Usage
