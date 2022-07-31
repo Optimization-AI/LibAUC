@@ -1,7 +1,8 @@
 """03_Optimizing_AUPRC_Loss_on_Imbalanced_dataset.ipynb
+# **Optimizing AUPRC Loss on imbalanced dataset**
 
-**Author**: Gang Li
-**Edited by:** Zhuoning Yuan
+**Author**: Gang Li  
+**Edited by**: Zhuoning Yuan
 
 In this tutorial, you will learn how to quickly train a Resnet18 model by optimizing **AUPRC** loss with **SOAP** optimizer [[ref]](https://arxiv.org/abs/2104.08736) on a binary image classification task with CIFAR-10 dataset. After completion of this tutorial, you should be able to use LibAUC to train your own models on your own datasets.
 
@@ -10,8 +11,8 @@ In this tutorial, you will learn how to quickly train a Resnet18 model by optimi
 * Github: https://github.com/Optimization-AI/LibAUC
 
 **Reference**:  
-
 If you find this tutorial helpful,  please acknowledge our library and cite the following paper:
+
 @article{qi2021stochastic,
   title={Stochastic Optimization of Areas Under Precision-Recall Curves with Provable Convergence},
   author={Qi, Qi and Luo, Youzhi and Xu, Zhao and Ji, Shuiwang and Yang, Tianbao},
@@ -21,9 +22,13 @@ If you find this tutorial helpful,  please acknowledge our library and cite the 
 }
 """
 
+!pip install libauc==1.2.0
+
 """# **Importing LibAUC**
+
 Import required packages to use
 """
+
 from libauc.losses import APLoss
 from libauc.optimizers import SOAP
 from libauc.models import resnet18 as ResNet18
@@ -64,6 +69,7 @@ generator = ImbalancedDataGenerator(verbose=True, random_seed=2022)
 (train_images, train_labels) = generator.transform(train_data, train_targets, imratio=imratio)
 (test_images, test_labels) = generator.transform(test_data, test_targets, imratio=0.5)
 
+"""Now that we defined the data input pipeline such as data augmentations. In this tutorials, we use `RandomCrop`, `RandomHorizontalFlip`."""
 
 class ImageDataset(Dataset):
     def __init__(self, images, targets, image_size=32, crop_size=30, mode='train'):
@@ -102,6 +108,7 @@ class ImageDataset(Dataset):
            image = self.transform_test(image)
         return idx, image, target
 
+"""We define `dataset`, `DualSampler` and `dataloader` here. By default, we use `batch_size` 64 and we oversample the minority class with `pos:neg=1:1` by setting `sampling_rate=0.5`."""
 
 batch_size = 64
 sampling_rate = 0.5
@@ -115,6 +122,9 @@ trainloader = torch.utils.data.DataLoader(trainSet, batch_size=batch_size, sampl
 trainloader_eval = torch.utils.data.DataLoader(trainSet_eval, batch_size=batch_size, shuffle=False, num_workers=2)
 testloader = torch.utils.data.DataLoader(testSet, batch_size=batch_size, shuffle=False, num_workers=2)
 
+
+# Parameters
+
 lr = 1e-3
 margin = 0.6
 gamma = 0.1
@@ -125,13 +135,13 @@ SEED = 2022
 
 """# **Model and Loss Setup**
 """
+
 set_all_seeds(SEED)
 model = ResNet18(pretrained=False, last_activation=None) 
 model = model.cuda()
 
 Loss = APLoss(pos_len=sampler.pos_len, margin=margin, gamma=gamma)
 optimizer = SOAP(model.parameters(), lr=lr, mode='adam', weight_decay=weight_decay)
-
 
 """# **Training**"""
 print ('Start Training')
@@ -183,3 +193,4 @@ for epoch in range(total_epoch):
     
     model.train()
     print("epoch: %s, train_ap: %.4f, test_ap: %.4f, lr: %.4f, test_best: %.4f"%(epoch, train_ap, val_ap, optimizer.lr, test_best))
+
