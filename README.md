@@ -45,9 +45,9 @@ X-risk refers to a family of compositional measures/losses, in which each data p
 :gear: Installation
 --------------
 ```
-$ pip install libauc==1.1.9rc4
+$ pip install libauc==1.2.0
 ```
-The latest version **`1.1.9rc4`** is available now! You can also download source code for previous version [here](https://github.com/Optimization-AI/LibAUC/releases). 
+The latest version **`1.2.0`** is available now! You can also download source code for previous version [here](https://github.com/Optimization-AI/LibAUC/releases). 
 
 
 :clipboard: Usage
@@ -81,7 +81,7 @@ The latest version **`1.1.9rc4`** is available now! You can also download source
 -------
 ### X-Risk
 - **AUROC**: [Optimizing AUROC loss on imbalanced dataset](https://github.com/Optimization-AI/LibAUC/blob/main/examples/02_Optimizing_AUROC_with_ResNet20_on_Imbalanced_CIFAR10.ipynb)
-- **AUPRC**: [Optimizing AUPRC loss on imbalanced dataset](https://github.com/Optimization-AI/LibAUC/blob/main/examples/03_Optimizing_AUPRC_with_ResNet18_on_Imbalanced_CIFAR10.ipynb) (Updates Coming Soon)
+- **AUPRC**: [Optimizing AUPRC loss on imbalanced dataset](https://github.com/Optimization-AI/LibAUC/blob/main/examples/03_Optimizing_AUPRC_with_ResNet18_on_Imbalanced_CIFAR10.ipynb)
 - **Partial AUROC**: [Optimizing Partial AUC loss on imbalanced dataset](https://github.com/Optimization-AI/LibAUC/blob/main/examples/11_Optimizing_pAUC_Loss_on_Imbalanced_data_wrapper.ipynb)
 - **Compositional AUROC**: [Optimizing Compositional AUROC loss on imbalanced dataset](https://github.com/Optimization-AI/LibAUC/blob/main/examples/09_Optimizing_CompositionalAUC_Loss_with_ResNet20_on_CIFAR10.ipynb)
 - **NDCG**: [Optimizing NDCG loss on MovieLens 20M](https://github.com/Optimization-AI/LibAUC/blob/main/examples/10_Optimizing_NDCG_Loss_on_MovieLens20M.ipynb) 
@@ -102,6 +102,21 @@ The latest version **`1.1.9rc4`** is available now! You can also download source
 :page_with_curl: Citation
 ---------
 If you find LibAUC useful in your work, please acknowledge our library and cite the papers in [BibTex](https://github.com/Optimization-AI/LibAUC/blob/main/citations.bib).
+```
+@software{libauc2022,
+  title={LibAUC: A Deep Learning Library for X-risk Optimization.},
+  author={Zhuoning Yuan, Zi-Hao Qiu, Gang Li, Dixian Zhu, Zhishuai Guo, Quanqi Hu, Bokun Wang, Qi Qi, Yongjian Zhong, Tianbao Yang},
+  year={2022}
+  }
+ ```
+ ```
+@article{yang2022algorithmic,
+  title={Algorithmic Foundation of Deep X-Risk Optimization},
+  author={Yang, Tianbao},
+  journal={arXiv preprint arXiv:2206.00439},
+  year={2022}
+}
+```
 
 :email: Contact
 ----------
