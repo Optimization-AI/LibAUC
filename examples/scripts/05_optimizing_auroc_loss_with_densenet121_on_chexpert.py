@@ -1,25 +1,33 @@
 """05_Optimizing_AUROC_Loss_with_DenseNet121_on_CheXpert.ipynb
-# Optimizing AUROC loss on Chest X-Ray dataset (CheXpert)
 
-Author: Zhuoning Yuan
+**Author**: Zhuoning Yuan
 
-Reference:  
+**Introduction**
+In this tutorial, you will learn how to quickly train a DenseNet121 model by optimizing **AUROC** using our novel **`AUCMLoss`** and **`PESG`** optimizer on Chest X-Ray dataset, e.g., [CheXpert](https://stanfordmlgroup.github.io/competitions/chexpert/). After completion of this tutorial, you should be able to use LibAUC to train your own models on your own datasets.
+
+**Useful Resources**:
+* Website: https://libauc.org
+* Github: https://github.com/Optimization-AI/LibAUC
+
+**Reference**:  
 If you find this tutorial helpful in your work,  please acknowledge our library and cite the following paper:
+
 @inproceedings{yuan2021large,
   title={Large-scale robust deep auc maximization: A new surrogate loss and empirical studies on medical image classification},
   author={Yuan, Zhuoning and Yan, Yan and Sonka, Milan and Yang, Tianbao},
   booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision},
   pages={3040--3049},
   year={2021}
-}
-@misc{libauc2022,
-      title={LibAUC: A Deep Learning Library for X-Risk Optimization.},
-      author={Zhuoning Yuan, Zi-Hao Qiu, Gang Li, Dixian Zhu, Zhishuai Guo, Quanqi Hu, Bokun Wang, Qi Qi, Yongjian Zhong, Tianbao Yang},
-      year={2022}
-    }
+  }
+"""
+
+"""# **Downloading CheXpert**
+*   To request dataset access, you need to apply from CheXpert website: https://stanfordmlgroup.github.io/competitions/chexpert/
+*   In this tutorial, we use the smaller version of dataset with lower image resolution, i.e., *CheXpert-v1.0-small.zip*
 
 """
 
+"""
 # **Importing LibAUC**"""
 
 from libauc.losses import AUCMLoss, CrossEntropyLoss
@@ -47,6 +55,9 @@ def set_all_seeds(SEED):
 * Multi-label classification (5 tasks)   
 * Adam + CrossEntropy Loss 
 * This step is optional
+
+
+
 """
 
 # dataloader
@@ -111,6 +122,7 @@ for epoch in range(1):
 """# **Optimizing AUCM Loss**
 *   Binary Classification
 *   PESG + AUCM Loss
+Note: you can also try other losses in this task, e.g., [CompositionalAUCLoss](https://github.com/Optimization-AI/LibAUC/blob/main/examples/09_Optimizing_CompositionalAUC_Loss_with_ResNet20_on_CIFAR10.ipynb).
 """
 
 # parameters
@@ -128,13 +140,13 @@ SEED = 123
 BATCH_SIZE = 32
 imratio = traindSet.imratio
 lr = 0.05 # using smaller learning rate is better
-gamma = 500
+epoch_decay = 2e-3
 weight_decay = 1e-5
 margin = 1.0
 
 # model
 set_all_seeds(SEED)
-model = DenseNet121(pretrained=False, last_activation='sigmoid', activations='relu', num_classes=1)
+model = DenseNet121(pretrained=False, last_activation=None, activations='relu', num_classes=1)
 model = model.cuda()
 
 
@@ -148,14 +160,12 @@ if True:
 
 
 # define loss & optimizer
-Loss = AUCMLoss()
+loss_fn = AUCMLoss()
 optimizer = PESG(model, 
-                 a=Loss.a, 
-                 b=Loss.b, 
-                 alpha=Loss.alpha, 
+                 loss_fn=loss_fn, 
                  lr=lr, 
-                 gamma=gamma, 
                  margin=margin, 
+                 epoch_decay=epoch_decay, 
                  weight_decay=weight_decay)
 
 best_val_auc = 0
@@ -166,7 +176,8 @@ for epoch in range(2):
       train_data, train_labels = data
       train_data, train_labels = train_data.cuda(), train_labels.cuda()
       y_pred = model(train_data)
-      loss = Loss(y_pred, train_labels)
+      y_pred = torch.sigmoid(y_pred)
+      loss = loss_fn(y_pred, train_labels)
       optimizer.zero_grad()
       loss.backward()
       optimizer.step()
