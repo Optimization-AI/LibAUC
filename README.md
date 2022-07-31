@@ -81,7 +81,7 @@ The latest version **`1.2.0`** is available now! You can also download source co
 -------
 ### X-Risk
 - **AUROC**: [Optimizing AUROC loss on imbalanced dataset](https://github.com/Optimization-AI/LibAUC/blob/main/examples/02_Optimizing_AUROC_with_ResNet20_on_Imbalanced_CIFAR10.ipynb)
-- **AUPRC**: [Optimizing AUPRC loss on imbalanced dataset](https://github.com/Optimization-AI/LibAUC/blob/main/examples/03_Optimizing_AUPRC_with_ResNet18_on_Imbalanced_CIFAR10.ipynb)
+- **AUPRC**: [Optimizing AUPRC loss on imbalanced dataset](https://github.com/Optimization-AI/LibAUC/blob/main/examples/03_Optimizing_AUPRC_Loss_on_Imbalanced_dataset.ipynb)
 - **Partial AUROC**: [Optimizing Partial AUC loss on imbalanced dataset](https://github.com/Optimization-AI/LibAUC/blob/main/examples/11_Optimizing_pAUC_Loss_on_Imbalanced_data_wrapper.ipynb)
 - **Compositional AUROC**: [Optimizing Compositional AUROC loss on imbalanced dataset](https://github.com/Optimization-AI/LibAUC/blob/main/examples/09_Optimizing_CompositionalAUC_Loss_with_ResNet20_on_CIFAR10.ipynb)
 - **NDCG**: [Optimizing NDCG loss on MovieLens 20M](https://github.com/Optimization-AI/LibAUC/blob/main/examples/10_Optimizing_NDCG_Loss_on_MovieLens20M.ipynb) 
