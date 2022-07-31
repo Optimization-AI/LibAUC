@@ -26,7 +26,7 @@
 We continuously update our library by making improvements and adding new features. If you use or like our library, please **star**:star: this repo. Thank you!
 
 
-:calendar: News
+:calendar: Updates
 ---
 - **2022/7**: LibAUC **1.2.0** is released! This version includes performance improvements as well as many new features added. Please check [release note](https://github.com/Optimization-AI/LibAUC/releases/tag/v1.2.0) for more details! Thanks!
 
