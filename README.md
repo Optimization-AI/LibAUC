@@ -28,7 +28,7 @@ We continuously update our library by making improvements and adding new feature
 
 :calendar: Updates
 ---
-- **2022/7**: LibAUC **1.2.0** is released! This version includes performance improvements as well as many new features added. Please check [release note](https://github.com/Optimization-AI/LibAUC/releases/tag/v1.2.0) for more details! Thanks!
+- **2022/7**: LibAUC **1.2.0** is released! In this version, we've included more losses and optimizers as well as made some performance improvements. Please check [release note](https://github.com/Optimization-AI/LibAUC/releases/tag/v1.2.0) for more details! Thanks!
 
 
 :mag: What is X-Risk?
