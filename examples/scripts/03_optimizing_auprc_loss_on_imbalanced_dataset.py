@@ -128,7 +128,7 @@ testloader = torch.utils.data.DataLoader(testSet, batch_size=batch_size, shuffle
 lr = 1e-3
 margin = 0.6
 gamma = 0.1
-weight_decay = 1e-5
+weight_decay = 0
 total_epoch = 60
 decay_epoch = [30]
 SEED = 2022
