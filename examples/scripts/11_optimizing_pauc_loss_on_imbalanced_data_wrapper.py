@@ -107,9 +107,6 @@ eta = 1e1 # learning rate for control negative samples weights
 
 # sampling parameters
 sampling_rate = 0.5
-num_pos = int(batch_size*sampling_rate)
-num_neg = int(batch_size*(1-sampling_rate))
-
 
 train_data, train_targets = CIFAR10(root='./data', train=True)
 test_data, test_targets  = CIFAR10(root='./data', train=False)
@@ -137,7 +134,7 @@ set_all_seeds(seed)
 model = resnet18(pretrained=False, num_classes=1, last_activation=None) 
 model = model.cuda()
 
-loss_fn = pAUCLoss(pos_len=sampler.pos_len, backend='SOPA', beta=beta, num_neg=num_neg, margin=margin)
+loss_fn = pAUCLoss(pos_len=sampler.pos_len, backend='SOPA', beta=beta, margin=margin)
 optimizer = SOPA(model.parameters(), loss_fn=loss_fn.loss_fn, mode='adam', lr=lr, eta=eta, weight_decay=weight_decay)
 
 
