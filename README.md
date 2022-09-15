@@ -126,4 +126,4 @@ If you find LibAUC useful in your work, please cite the papers in [BibTex](https
 
 :email: Contact
 ----------
-For any technical questions, please open a new issue in the Github. If you have any other questions, please contact us @ [Zhuoning Yuan](https://zhuoning.cc) [yzhuoning@gmail.com] and [Tianbao Yang](https://homepage.cs.uiowa.edu/~tyng/) [tianbao-yang@uiowa.edu]. 
+For any technical questions, please open a new issue in the Github. If you have any other questions, please contact us @ [Zhuoning Yuan](https://zhuoning.cc) [yzhuoning@gmail.com] and [Tianbao Yang](http://people.tamu.edu/~tianbao-yang/) [tianbao-yang@tamu.edu]. 
