@@ -34,18 +34,18 @@ We continuously update our library by making improvements and adding new feature
 :mag: What is X-Risk?
 ---
 X-risk refers to a family of compositional measures/losses, in which each data point is compared with a set of data points explicitly or implicitly for defining a risk function. It covers a family of widely used measures/losses including but not limited to the following four interconnected categories:
-- **[Areas under the curves]()**, including areas under ROC curves (AUROC), areas under Precision-Recall curves (AUPRC), one-way and two-wary partial areas under ROC curves.
-- **[Ranking measures/objectives]()**, including p-norm push for bipartite ranking, listwise losses for learning to rank (e.g., listNet), mean average precision (mAP), normalized discounted cumulative gain (NDCG), etc.
-- **[Performance at the top]()**, including top push, top-K variants of mAP and NDCG, Recall at top K positions (Rec@K), Precision at a certain Recall level (Prec@Rec), etc.
-- **[Contrastive objectives]()**, including supervised contrastive objectives (e.g., NCA), and global self-supervised contrastive objectives improving upon SimCLR and CLIP.
+- **Areas under the curves**, including areas under ROC curves (AUROC), areas under Precision-Recall curves (AUPRC), one-way and two-wary partial areas under ROC curves.
+- **Ranking measures/objectives**, including p-norm push for bipartite ranking, listwise losses for learning to rank (e.g., listNet), mean average precision (mAP), normalized discounted cumulative gain (NDCG), etc.
+- **Performance at the top**, including top push, top-K variants of mAP and NDCG, Recall at top K positions (Rec@K), Precision at a certain Recall level (Prec@Rec), etc.
+- **Contrastive objectives**, including supervised contrastive objectives (e.g., NCA), and global self-supervised contrastive objectives improving upon SimCLR and CLIP.
 
 
 :star: Key Features
 ---
-- **[Easy Installation](https://github.com/Optimization-AI/LibAUC#key-features)** - Easy to install and insert LibAUC code into existing training pipeline with Deep Learning frameworks like PyTorch.
-- **[Broad Applications](https://github.com/Optimization-AI/LibAUC#key-features)** - Users can learn different neural network structures (e.g., MLP, CNN, GNN, transformer, etc) that support their data types.
-- **[Efficient Algorithms](https://github.com/Optimization-AI/LibAUC#key-features)** - Stochastic algorithms with provable theoretical convergence that support learning with millions of data points without larger batch size.
-- **[Hands-on Tutorials](https://github.com/Optimization-AI/LibAUC#key-features)** - Hands-on tutorials are provided for optimizing a variety of measures and objectives belonging to the family of X-risks.
+- **Easy Installation** - Easy to install and insert LibAUC code into existing training pipeline with Deep Learning frameworks like PyTorch.
+- **Broad Applications** - Users can learn different neural network structures (e.g., MLP, CNN, GNN, transformer, etc) that support their data types.
+- **Efficient Algorithms** - Stochastic algorithms with provable theoretical convergence that support learning with millions of data points without larger batch size.
+- **Hands-on Tutorials** - Hands-on tutorials are provided for optimizing a variety of measures and objectives belonging to the family of X-risks.
 
 
 :gear: Installation
@@ -101,7 +101,7 @@ The latest version **`1.2.0`** is available now! You can check [release note](ht
 - [Optimizing AUROC loss on Skin Cancer dataset (Melanoma)](https://github.com/Optimization-AI/LibAUC/blob/main/examples/08_Optimizing_AUROC_Loss_with_DenseNet121_on_Melanoma.ipynb)
 - [Optimizing AUROC loss on Molecular Graph dataset (OGB-Molhiv)](https://github.com/yzhuoning/DeepAUC_OGB_Challenge)
 - [Optimizing multi-label AUROC loss on Chest X-Ray dataset (CheXpert)](https://github.com/Optimization-AI/LibAUC/blob/main/examples/07_Optimizing_Multi_Label_AUROC_Loss_with_DenseNet121_on_CheXpert.ipynb)
-- [Optimizing AUROC loss on Tabular dataset (Credit Fraud)](https://github.com/Optimization-AI/LibAUC/blob/main/examples/placeholder.md) (Updates Coming Soon) 
+- [Optimizing AUROC loss on Tabular dataset (Credit Fraud)](https://github.com/Optimization-AI/LibAUC/blob/main/examples/12_Optimizing_AUROC_Loss_on_Tabular_Data.ipynb)
 - [Optimizing AUROC loss for Federated Learning](https://github.com/Optimization-AI/LibAUC/blob/main/examples/scripts/06_Optimizing_AUROC_loss_with_DenseNet121_on_CIFAR100_in_Federated_Setting_CODASCA.py)
 
 
