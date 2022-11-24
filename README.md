@@ -7,13 +7,11 @@
 
 **LibAUC**: A Deep Learning Library for X-Risk Optimization
 ---
-<p align="left">
-  <img alt="PyPI version" src="https://img.shields.io/pypi/v/libauc?color=blue&style=flat"/>
-  <img alt="PyPI version" src="https://static.pepy.tech/personalized-badge/libauc?period=total&units=abbreviation&left_color=grey&right_color=blue&left_text=Downloads"/>
-  <img alt="Python Version" src="https://img.shields.io/pypi/pyversions/libauc?color=blue&style=flat" />
-  <img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-1.8-yellow?color=blue&style=flat" />	
-  <img alt="PyPI LICENSE" src="https://img.shields.io/github/license/yzhuoning/libauc?color=blue&logo=libauc&style=flat" />	
-</p>
+[![Pypi](https://img.shields.io/pypi/v/libauc?color=blue&style=flat)](https://github.com/Optimization-AI/LibAUC)
+[![Downloads](https://pepy.tech/badge/libauc)](https://pepy.tech/project/libauc)
+[![python](https://img.shields.io/pypi/pyversions/libauc)](https://github.com/Optimization-AI/LibAUC)
+[![PyTorch](https://img.shields.io/badge/PyTorch-1.8-yellow?color=blue&style=flat)](https://github.com/Optimization-AI/LibAUC)
+[![LICENSE](https://img.shields.io/github/license/yzhuoning/libauc?color=blue&logo=libauc&style=flat)](https://github.com/Optimization-AI/LibAUC/blob/main/LICENSE)
 
 
 [**Website**](https://libauc.org/)
