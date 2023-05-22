@@ -2,7 +2,7 @@
   <img src="https://github.com/yzhuoning/LibAUC/blob/main/imgs/libauc.png" width="70%" align="center"/>
 </p>
 <p align="center">
-  Logo by <a href="https://zhuoning.cc">Zhuoning Yuan</a>
+  Logo by <a href="https://yzhuoning.com">Zhuoning Yuan</a>
 </p>
 
 **LibAUC**: A Deep Learning Library for X-Risk Optimization
@@ -26,7 +26,7 @@ We continuously update our library by making improvements and adding new feature
 
 :calendar: Updates
 ---
-- **2023/5**: We are currently working on another major update, which will include new features and improvements to the existing codebase. We expect the new version to be released later this month!
+- **2023/5**: We are currently working on another major update, which will include new features, documentation & codebase improvements. We expect the new version to be released later this month!
 - **2022/7**: LibAUC **1.2.0** is released! In this version, we've included more losses and optimizers as well as made some performance improvements. Please check [release note](https://github.com/Optimization-AI/LibAUC/releases/tag/v1.2.0) for more details! Thanks!
 
 
@@ -126,4 +126,4 @@ If you find LibAUC useful in your work, please cite the papers in [BibTex](https
 
 :email: Contact
 ----------
-For any technical questions, please open a new issue in the Github. If you have any other questions, please contact us @ [Zhuoning Yuan](https://zhuoning.cc) [yzhuoning@gmail.com] and [Tianbao Yang](http://people.tamu.edu/~tianbao-yang/) [tianbao-yang@tamu.edu]. 
+For any technical questions, please open a new issue in the Github. If you have any other questions, please contact us @ [Zhuoning Yuan](https://yzhuoning.com) [yzhuoning@gmail.com] and [Tianbao Yang](http://people.tamu.edu/~tianbao-yang/) [tianbao-yang@tamu.edu]. 
