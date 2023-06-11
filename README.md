@@ -43,7 +43,7 @@ Why LibAUC?
 LibAUC offers an easier way to directly optimize commonly-used performance measures and losses with user-friendly API. LibAUC has broad applications in AI for tackling many challenges, such as **Classification of Imbalanced Data (CID)**, **Learning to Rank (LTR)**, and **Contrastive Learning of Representation (CLR)**. LibAUC provides a unified framework to abstract the optimization of many compositional loss functions, including surrogate losses for AUROC, AUPRC/AP, and partial AUROC that are suitable for CID, surrogate losses for NDCG, top-K NDCG, and listwise losses that are used in LTR, and global contrastive losses for CLR. Here’s an overview:
 
 <p align="center">
-  <img src="./imgs/dxo-overview-v3.png" width="65%" align="center"/>
+  <img src="https://docs.libauc.org/_images/dxo-overview-v4.png" width="65%" align="center"/>
 </p>
 
 
