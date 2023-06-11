@@ -1,61 +1,61 @@
 <p align="center">
-  <img src="https://github.com/yzhuoning/LibAUC/blob/main/imgs/libauc.png" width="70%" align="center"/>
-</p>
-<p align="center">
-  Logo by <a href="https://yzhuoning.com">Zhuoning Yuan</a>
+  <img src="https://docs.libauc.org/_images/libauc_new_logo_v5.png" width="70%" align="center"/><br>
+   Logo by <a href="https://zhuoning.cc">Zhuoning Yuan</a> 
 </p>
 
-**LibAUC**: A Deep Learning Library for X-Risk Optimization
+
+
+LibAUC: A Deep Learning Library for X-Risk Optimization
 ---
-[![Pypi](https://img.shields.io/pypi/v/libauc?color=blue&style=flat)](https://github.com/Optimization-AI/LibAUC)
-[![Downloads](https://pepy.tech/badge/libauc)](https://pepy.tech/project/libauc)
-[![python](https://img.shields.io/pypi/pyversions/libauc)](https://github.com/Optimization-AI/LibAUC)
-[![PyTorch](https://img.shields.io/badge/PyTorch-1.8-yellow?color=blue&style=flat)](https://github.com/Optimization-AI/LibAUC)
-[![LICENSE](https://img.shields.io/github/license/yzhuoning/libauc?color=blue&logo=libauc&style=flat)](https://github.com/Optimization-AI/LibAUC/blob/main/LICENSE)
+<p align="left">
+  <a href="https://github.com/Optimization-AI/LibAUC">
+    <img alt="Pypi" src="https://img.shields.io/pypi/v/libauc?color=blue&style=flat"/>
+  </a>
+  <a href="https://pepy.tech/project/libauc">
+    <img alt="Downloads" src="https://pepy.tech/badge/libauc"/>
+  </a>
+  <a href="https://github.com/Optimization-AI/LibAUC">
+    <img alt="python" src="https://img.shields.io/pypi/pyversions/libauc"/>
+  </a>
+  <a href="https://github.com/Optimization-AI/LibAUC">
+    <img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-2.0-yellow?color=blue&style=flat"/>
+  </a>
+  <a href="https://github.com/Optimization-AI/LibAUC/blob/main/LICENSE">
+    <img alt="LICENSE" src="https://img.shields.io/github/license/yzhuoning/libauc?color=blue&logo=libauc&style=flat"/>
+  </a>
+</p>
 
-
-[**Website**](https://libauc.org/)
-| [**Updates**](https://libauc.org/news/)
+| [**Documentation**](https://libauc.org/doc/)
 | [**Installation**](https://libauc.org/installation/)
+| [**Website**](https://libauc.org/)
 | [**Tutorial**](https://github.com/Optimization-AI/LibAUC/tree/main/examples)
 | [**Research**](https://libauc.org/publications/)
-| [**Github**](https://github.com/Optimization-AI/LibAUC/)
-
-We continuously update our library by making improvements and adding new features. If you use or like our library, please **star**:star: this repo. Thank you!
+| [**Github**](https://github.com/Optimization-AI/LibAUC/) |
 
 
-:calendar: Updates
+News
+--- 
+- [2023/06/10]: **LibAUC 1.3.0 is now available!** In this update, we have made improvements and introduced new features. We also release a new documentation website at [https://docs.libauc.org/](https://docs.libauc.org/). Please see the [release notes](https://github.com/Optimization-AI/LibAUC/releases) for details. 
+- [2023/06/10]: We value your thoughts and feedback! Please consider filling out [this brief survey](https://forms.gle/oWNtjN9kLT51CMdf9) to guide our future developments. Thank you!
+
+Why LibAUC?
 ---
-- **2023/5**: We are currently working on another major update, which will include new features, documentation & codebase improvements. We expect the new version to be released later this month!
-- **2022/7**: LibAUC **1.2.0** is released! In this version, we've included more losses and optimizers as well as made some performance improvements. Please check [release note](https://github.com/Optimization-AI/LibAUC/releases/tag/v1.2.0) for more details! Thanks!
+LibAUC offers an easier way to directly optimize commonly-used performance measures and losses with user-friendly API. LibAUC has broad applications in AI for tackling many challenges, such as **Classification of Imbalanced Data (CID)**, **Learning to Rank (LTR)**, and **Contrastive Learning of Representation (CLR)**. LibAUC provides a unified framework to abstract the optimization of many compositional loss functions, including surrogate losses for AUROC, AUPRC/AP, and partial AUROC that are suitable for CID, surrogate losses for NDCG, top-K NDCG, and listwise losses that are used in LTR, and global contrastive losses for CLR. Here’s an overview:
+
+<p align="center">
+  <img src="./imgs/dxo-overview-v3.png" width="65%" align="center"/>
+</p>
 
 
-:mag: What is X-Risk?
----
-X-risk refers to a family of compositional measures/losses, in which each data point is compared with a set of data points explicitly or implicitly for defining a risk function. It covers a family of widely used measures/losses including but not limited to the following four interconnected categories:
-- **Areas under the curves**, including areas under ROC curves (AUROC), areas under Precision-Recall curves (AUPRC), one-way and two-wary partial areas under ROC curves.
-- **Ranking measures/objectives**, including p-norm push for bipartite ranking, listwise losses for learning to rank (e.g., listNet), mean average precision (mAP), normalized discounted cumulative gain (NDCG), etc.
-- **Performance at the top**, including top push, top-K variants of mAP and NDCG, Recall at top K positions (Rec@K), Precision at a certain Recall level (Prec@Rec), etc.
-- **Contrastive objectives**, including supervised contrastive objectives (e.g., NCA), and global self-supervised contrastive objectives improving upon SimCLR and CLIP.
-
-
-:star: Key Features
----
-- **Easy Installation** - Easy to install and insert LibAUC code into existing training pipeline with Deep Learning frameworks like PyTorch.
-- **Broad Applications** - Users can learn different neural network structures (e.g., MLP, CNN, GNN, transformer, etc) that support their data types.
-- **Efficient Algorithms** - Stochastic algorithms with provable theoretical convergence that support learning with millions of data points without larger batch size.
-- **Hands-on Tutorials** - Hands-on tutorials are provided for optimizing a variety of measures and objectives belonging to the family of X-risks.
-
-
-:gear: Installation
+Installation
 --------------
 ```
-$ pip install libauc==1.2.0
+$ pip install -U libauc
 ```
-The latest version **`1.2.0`** is available now! You can check [release note](https://github.com/Optimization-AI/LibAUC/releases/tag/v1.2.0) for more details. Source code is available for download [here](https://github.com/Optimization-AI/LibAUC/releases). 
+For more details, please check the latest [release note](https://github.com/Optimization-AI/LibAUC/releases/).
 
 
-:clipboard: Usage
+Usage
 ---
 #### Example training pipline for optimizing X-risk (e.g., AUROC) 
 ```python
@@ -82,34 +82,39 @@ The latest version **`1.2.0`** is available now! You can check [release note](ht
 >>> optimizer.update_regularizer()
 ```
 
-:notebook_with_decorative_cover: Tutorials
+Tutorials
 -------
 ### X-Risk
-- **AUROC**: [Optimizing AUROC loss on imbalanced dataset](https://github.com/Optimization-AI/LibAUC/blob/main/examples/02_Optimizing_AUROC_with_ResNet20_on_Imbalanced_CIFAR10.ipynb)
-- **AUPRC**: [Optimizing AUPRC loss on imbalanced dataset](https://github.com/Optimization-AI/LibAUC/blob/main/examples/03_Optimizing_AUPRC_Loss_on_Imbalanced_dataset.ipynb)
-- **Partial AUROC**: [Optimizing Partial AUC loss on imbalanced dataset](https://github.com/Optimization-AI/LibAUC/blob/main/examples/11_Optimizing_pAUC_Loss_on_Imbalanced_data_wrapper.ipynb)
-- **Compositional AUROC**: [Optimizing Compositional AUROC loss on imbalanced dataset](https://github.com/Optimization-AI/LibAUC/blob/main/examples/09_Optimizing_CompositionalAUC_Loss_with_ResNet20_on_CIFAR10.ipynb)
-- **NDCG**: [Optimizing NDCG loss on MovieLens 20M](https://github.com/Optimization-AI/LibAUC/blob/main/examples/10_Optimizing_NDCG_Loss_on_MovieLens20M.ipynb) 
-- **SogCLR**: [Optimizing Contrastive Loss using small batch size on ImageNet-1K](https://github.com/Optimization-AI/SogCLR)
 
-### Applications
-- [A Tutorial of Imbalanced Data Sampler](https://github.com/Optimization-AI/LibAUC/blob/main/examples/placeholder.md) (Updates Coming Soon)
-- [Constructing benchmark imbalanced datasets for CIFAR10, CIFAR100, CATvsDOG, STL10](https://github.com/Optimization-AI/LibAUC/blob/main/examples/01_Creating_Imbalanced_Benchmark_Datasets.ipynb)
-- [Using LibAUC with PyTorch learning rate scheduler](https://github.com/Optimization-AI/LibAUC/blob/main/examples/04_Training_with_Pytorch_Learning_Rate_Scheduling.ipynb)
-- [Optimizing AUROC loss on Chest X-Ray dataset (CheXpert)](https://github.com/Optimization-AI/LibAUC/blob/main/examples/05_Optimizing_AUROC_Loss_with_DenseNet121_on_CheXpert.ipynb)
-- [Optimizing AUROC loss on Skin Cancer dataset (Melanoma)](https://github.com/Optimization-AI/LibAUC/blob/main/examples/08_Optimizing_AUROC_Loss_with_DenseNet121_on_Melanoma.ipynb)
-- [Optimizing AUROC loss on Molecular Graph dataset (OGB-Molhiv)](https://github.com/yzhuoning/DeepAUC_OGB_Challenge)
-- [Optimizing multi-label AUROC loss on Chest X-Ray dataset (CheXpert)](https://github.com/Optimization-AI/LibAUC/blob/main/examples/07_Optimizing_Multi_Label_AUROC_Loss_with_DenseNet121_on_CheXpert.ipynb)
-- [Optimizing AUROC loss on Tabular dataset (Credit Fraud)](https://github.com/Optimization-AI/LibAUC/blob/main/examples/12_Optimizing_AUROC_Loss_on_Tabular_Data.ipynb)
-- [Optimizing AUROC loss for Federated Learning](https://github.com/Optimization-AI/LibAUC/blob/main/examples/scripts/06_Optimizing_AUROC_loss_with_DenseNet121_on_CIFAR100_in_Federated_Setting_CODASCA.py)
+- **Optimizing AUCMLoss**: [[example]](https://docs.libauc.org/examples/auroc.html)
+- **Optimizing APLoss**: [[example]](https://docs.libauc.org/examples/auprc.html)
+- **Optimizing CompositionalAUCLoss**: [[example]](https://docs.libauc.org/examples/compauc.html)
+- **Optimizing pAUCLoss**: [[example]](https://docs.libauc.org/examples/pauc.html)
+- **Optimizing MIDAMLoss**: [[example]](https://docs.libauc.org/examples/MIDAM-att-tabular.html)
+- **Optimizing NDCGLoss**: [[example]](https://docs.libauc.org/examples/ndcg.html) 
+- **Optimizing GCLoss (Unimodal)**: [[example]](https://docs.libauc.org/examples/sogclr.html)
+- **Optimizing GCLoss (Bimodal)**: [[example]](https://docs.libauc.org/examples/isogclr.html)
+
+<details markdown="1">
+  <summary>Other Applications</summary>
+  
+  - [Constructing benchmark imbalanced datasets for CIFAR10, CIFAR100, CATvsDOG, STL10](https://github.com/Optimization-AI/LibAUC/blob/main/examples/01_Creating_Imbalanced_Benchmark_Datasets.ipynb)
+  - [Using LibAUC with PyTorch learning rate scheduler](https://github.com/Optimization-AI/LibAUC/blob/main/examples/04_Training_with_Pytorch_Learning_Rate_Scheduling.ipynb) 
+  - [Optimizing AUROC loss on Chest X-Ray dataset (CheXpert)](https://github.com/Optimization-AI/LibAUC/blob/main/examples/05_Optimizing_AUROC_Loss_with_DenseNet121_on_CheXpert.ipynb)
+  - [Optimizing AUROC loss on Skin Cancer dataset (Melanoma)](https://github.com/Optimization-AI/LibAUC/blob/main/examples/08_Optimizing_AUROC_Loss_with_DenseNet121_on_Melanoma.ipynb)
+  - [Optimizing multi-label AUROC loss on Chest X-Ray dataset (CheXpert)](https://github.com/Optimization-AI/LibAUC/blob/main/examples/07_Optimizing_Multi_Label_AUROC_Loss_with_DenseNet121_on_CheXpert.ipynb)
+  - [Optimizing AUROC loss on Tabular dataset (Credit Fraud)](https://github.com/Optimization-AI/LibAUC/blob/main/examples/12_Optimizing_AUROC_Loss_on_Tabular_Data.ipynb)
+  - [Optimizing AUROC loss for Federated Learning](https://github.com/Optimization-AI/LibAUC/blob/main/examples/scripts/06_Optimizing_AUROC_loss_with_DenseNet121_on_CIFAR100_in_Federated_Setting_CODASCA.py)
+	
+</details>
 
 
-:page_with_curl: Citation
+Citation
 ---------
-If you find LibAUC useful in your work, please cite the papers in [BibTex](https://github.com/Optimization-AI/LibAUC/blob/main/citations.bib) and acknowledge our library:
+If you find LibAUC useful in your work, please cite the following papers:
 ```
 @inproceedings{yuan2023libauc,
-	title={LibAUC: A Deep Learning Library for X-risk Optimization},
+	title={LibAUC: A Deep Learning Library for X-Risk Optimization},
 	author={Zhuoning Yuan and Dixian Zhu and Zi-Hao Qiu and Gang Li and Xuanhui Wang and Tianbao Yang},
 	booktitle={29th SIGKDD Conference on Knowledge Discovery and Data Mining},
 	year={2023}
@@ -124,6 +129,6 @@ If you find LibAUC useful in your work, please cite the papers in [BibTex](https
 }
 ```
 
-:email: Contact
+Contact
 ----------
-For any technical questions, please open a new issue in the Github. If you have any other questions, please contact us @ [Zhuoning Yuan](https://yzhuoning.com) [yzhuoning@gmail.com] and [Tianbao Yang](http://people.tamu.edu/~tianbao-yang/) [tianbao-yang@tamu.edu]. 
+For any technical questions, please open a new issue in the Github. If you have any other questions, please contact us @ [Zhuoning Yuan](https://zhuoning.cc) [yzhuoning@gmail.com] and [Tianbao Yang](http://people.tamu.edu/~tianbao-yang/) [tianbao-yang@tamu.edu]. 
