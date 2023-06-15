@@ -25,7 +25,7 @@ LibAUC: A Deep Learning Library for X-Risk Optimization
   </a>
 </p>
 
-| [**Documentation**](https://libauc.org/doc/)
+| [**Documentation**](https://docs.libauc.org/)
 | [**Installation**](https://libauc.org/installation/)
 | [**Website**](https://libauc.org/)
 | [**Tutorial**](https://github.com/Optimization-AI/LibAUC/tree/main/examples)
