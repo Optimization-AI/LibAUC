@@ -1,6 +1,6 @@
 <p align="center">
   <img src="https://docs.libauc.org/_images/libauc_new_logo_v5.png" width="70%" align="center"/><br>
-   Logo by <a href="https://zhuoning.cc">Zhuoning Yuan</a> 
+   Logo by <a href="https://zhuoning.cc">Zhuoning Yuan, Tianbao Yang</a> 
 </p>
 
 
