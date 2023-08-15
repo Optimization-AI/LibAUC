@@ -11,7 +11,7 @@ LibAUC: A Deep Learning Library for X-Risk Optimization
     <img alt="Pypi" src="https://img.shields.io/pypi/v/libauc?color=blue&style=flat"/>
   </a>
   <a href="https://pepy.tech/project/libauc">
-    <img alt="Downloads" src="https://pepy.tech/badge/libauc"/>
+    <img alt="Downloads" src="https://static.pepy.tech/badge/LibAUC"/>
   </a>
   <a href="https://github.com/Optimization-AI/LibAUC">
     <img alt="python" src="https://img.shields.io/pypi/pyversions/libauc"/>
