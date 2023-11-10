@@ -17,6 +17,6 @@ jobs:
         username: ${{ secrets.EMAIL_USERNAME }}
         password: ${{ secrets.EMAIL_PASSWORD }}
         subject: 'New Issue Created'
-        to: 'libaucx@gmail.com'
-        from: 'libaucx@gmail.com'
+        to: 'yangtia1@gmail.com'
+        from: 'yangtia1@gmail.com'
         body: 'A new issue has been created in your GitHub repository.'
