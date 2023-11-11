@@ -132,7 +132,7 @@ If you find LibAUC useful in your work, please cite the following papers:
  ```
  ```
 @article{yang2022algorithmic,
-	title={Algorithmic Foundation of Deep X-Risk Optimization},
+	title={Algorithmic Foundations of Empirical X-Risk Minimization},
 	author={Yang, Tianbao},
 	journal={arXiv preprint arXiv:2206.00439},
 	year={2022}
