@@ -48,10 +48,21 @@ LibAUC offers an easier way to directly optimize commonly-used performance measu
 
 Installation
 --------------
+Installing from pip
 ```
 $ pip install -U libauc
 ```
+
+Installing from source
+
+```
+$ git clone https://github.com/Optimization-AI/LibAUC.git
+$ cd LibAUC
+$ pip install .
+```
 For more details, please check the latest [release note](https://github.com/Optimization-AI/LibAUC/releases/).
+
+
 
 
 Usage
