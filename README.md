@@ -20,7 +20,7 @@ LibAUC: A Deep Learning Library for X-Risk Optimization
     <img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-2.0-yellow?color=blue&style=flat"/>
   </a>
   <a href="https://github.com/Optimization-AI/LibAUC/blob/main/LICENSE">
-    <img alt="LICENSE" src="https://img.shields.io/github/license/yzhuoning/libauc?color=blue&logo=libauc&style=flat"/>
+    <img alt="LICENSE" src="https://img.shields.io/badge/License-MIT-yellow.svg"/>
   </a>
 </p>
 
