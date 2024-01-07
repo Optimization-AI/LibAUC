@@ -115,7 +115,7 @@ class AUCMLoss(torch.nn.Module):
                 self.p = pos_mask.sum()/y_true.shape[0]
             loss = (1-self.p)*torch.mean((y_pred - self.a)**2*(1==y_true).float()) + \
                     self.p*torch.mean((y_pred - self.b)**2*(0==y_true).float())   + \
-                    2*self.alpha*(self.p*(1-self.p) + \
+                    2*self.alpha*(self.p*(1-self.p)*self.margin + \
                     torch.mean((self.p*y_pred*(0==y_true).float() - (1-self.p)*y_pred*(1==y_true).float())) )- \
                     self.p*(1-self.p)*self.alpha**2
         else:
@@ -213,7 +213,7 @@ class CompositionalAUCLoss(torch.nn.Module):
                     self.p = (y_true==1).sum()/y_true.shape[0] 
                 self.L_AUC = (1-self.p)*torch.mean((y_pred - self.a)**2*(1==y_true).float()) + \
                              self.p*torch.mean((y_pred - self.b)**2*(0==y_true).float())     + \
-                             2*self.alpha*(self.p*(1-self.p) + \
+                             2*self.alpha*(self.p*(1-self.p)*self.margin + \
                              torch.mean((self.p*y_pred*(0==y_true).float() - (1-self.p)*y_pred*(1==y_true).float())) )- \
                              self.p*(1-self.p)*self.alpha**2
             
