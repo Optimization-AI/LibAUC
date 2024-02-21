@@ -19,7 +19,7 @@ class SogCLR(torch.optim.Optimizer):
     Args:
         params (iterable): iterable of parameters to optimize
         lr (float): learning rate (default: ``0.1``)
-        mode (str): optimization mode, 'sgd' or 'adam' (default: ``'sgd'``)
+        mode (str): optimization mode, 'lars' or 'adamw' (default: ``'lars'``)
         weight_decay (float, optional): weight decay (L2 penalty) (default: ``1e-5``)
         epoch_decay (float, optional): epoch decay (epoch-wise l2 penalty) (default: ``0.0``)
         momentum (float, optional): momentum factor for 'sgd' mode (default: ``0.9``)
