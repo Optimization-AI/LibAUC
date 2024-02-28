@@ -375,7 +375,7 @@ class pAUC_CVaR_Loss(torch.nn.Module):
 
             - ``margin`` can be tuned in ``{0.1, 0.3, 0.5, 0.7, 0.9, 1.0}`` for better performance.
             - ``beta`` can be tuned in the range (0.1, 0.9), ideally based on task requirement for FPR.
-            - ``eta`` can be tuned in ``{1.0, 0.1, 0.01}`` for better performance. 
+            - ``eta`` can be tuned in ``{10, 1.0, 0.1, 0.01}`` for better performance. 
 
 
         Reference:
@@ -390,7 +390,7 @@ class pAUC_CVaR_Loss(torch.nn.Module):
                  num_neg=None, 
                  margin=1.0, 
                  beta=0.2, 
-                 eta=1.0,
+                 eta=0.1,
                  surr_loss='squared_hinge', 
                  device=None):
         super(pAUC_CVaR_Loss, self).__init__()    
