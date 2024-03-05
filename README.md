@@ -73,11 +73,11 @@ Usage
 >>> #import our loss and optimizer
 >>> from libauc.losses import AUCMLoss 
 >>> from libauc.optimizers import PESG 
-...
+... #pretraining your model through supervised learning or self-supervised learning
 >>> #define loss & optimizer
 >>> Loss = AUCMLoss()
 >>> optimizer = PESG()
-...
+... 
 >>> #training
 >>> model.train()    
 >>> for data, targets in trainloader:
