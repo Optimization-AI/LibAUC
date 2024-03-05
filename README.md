@@ -96,7 +96,7 @@ Usage
 
 Tutorials
 -------
-### X-Risk
+### X-Risk Minimization
 
 - **Optimizing AUCMLoss**: [[example]](https://docs.libauc.org/examples/auroc.html)
 - **Optimizing APLoss**: [[example]](https://docs.libauc.org/examples/auprc.html)
