@@ -73,7 +73,7 @@ Usage
 >>> #import our loss and optimizer
 >>> from libauc.losses import AUCMLoss 
 >>> from libauc.optimizers import PESG 
-... #pretraining your model through supervised learning or self-supervised learning
+>>> #pretraining your model through supervised learning or self-supervised learning
 >>> #load a pretrained encoder and random initialize the last linear layer 
 >>> #define loss & optimizer
 >>> Loss = AUCMLoss()
