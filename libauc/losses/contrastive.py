@@ -99,8 +99,7 @@ class GCLoss_v1(nn.Module):
         
         # Gather hidden1/hidden2 across replicas and create local labels.
         if self.distributed:
-           hidden1_large = torch.cat(all_gather_layer.apply(hidden1), dim=0) # why concat_all_gather()
-           hidden2_large =  torch.cat(all_gather_layer.apply(hidden2), dim=0)
+           hidden1_large, hidden2_large = gather_features(hidden1, hidden2)
            enlarged_batch_size = hidden1_large.shape[0]
 
            labels_idx = (torch.arange(batch_size, dtype=torch.long) + batch_size  * torch.distributed.get_rank()).to(self.device) 
@@ -136,10 +135,11 @@ class GCLoss_v1(nn.Module):
 
         # u init    
         if self.u[index].sum() == 0:
-            self.gamma = 1
-            
-        u1 = (1 - self.gamma ) * self.u[index].cuda() + self.gamma * torch.sum(neg_logits1, dim=1, keepdim=True)/(2*(batch_size-1))
-        u2 = (1 - self.gamma ) * self.u[index].cuda() + self.gamma * torch.sum(neg_logits2, dim=1, keepdim=True)/(2*(batch_size-1))
+            u1 = torch.sum(neg_logits1, dim=1, keepdim=True)/(2*(batch_size-1))
+            u2 = torch.sum(neg_logits2, dim=1, keepdim=True)/(2*(batch_size-1))
+        else:
+            u1 = (1 - self.gamma ) * self.u[index].cuda() + self.gamma * torch.sum(neg_logits1, dim=1, keepdim=True)/(2*(batch_size-1))
+            u2 = (1 - self.gamma ) * self.u[index].cuda() + self.gamma * torch.sum(neg_logits2, dim=1, keepdim=True)/(2*(batch_size-1))
 
         # this sync on all devices (since "hidden" are gathering from all devices)  #### maybe we can concat_all_gather index before?
         if self.distributed:
