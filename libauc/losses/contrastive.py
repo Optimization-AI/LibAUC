@@ -99,8 +99,7 @@ class GCLoss_v1(nn.Module):
         
         # Gather hidden1/hidden2 across replicas and create local labels.
         if self.distributed:
-           hidden1_large = torch.cat(all_gather_layer.apply(hidden1), dim=0) # why concat_all_gather()
-           hidden2_large =  torch.cat(all_gather_layer.apply(hidden2), dim=0)
+           hidden1_large, hidden2_large = gather_features(hidden1, hidden2)
            enlarged_batch_size = hidden1_large.shape[0]
 
            labels_idx = (torch.arange(batch_size, dtype=torch.long) + batch_size  * torch.distributed.get_rank()).to(self.device) 
