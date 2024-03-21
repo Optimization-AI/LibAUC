@@ -24,6 +24,7 @@ class CIFAR10(VisionDataset):
         download (bool, optional): If true, downloads the dataset from the internet and
             puts it in root directory. If dataset is already downloaded, it is not
             downloaded again.
+        return_index (bool, optional): returns a tuple containing data, target, and index if return_index is set to True. Otherwise, it returns a tuple containing data and target only (default: ``False``)
 
     """
 

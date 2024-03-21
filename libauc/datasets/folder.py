@@ -123,6 +123,7 @@ class DatasetFolder(VisionDataset):
         is_valid_file (callable, optional): A function that takes path of a file
             and check if the file is a valid file (used to check of corrupt files)
             both extensions and is_valid_file should not be passed.
+        return_index (bool, optional): returns a tuple containing data, target, and index if return_index is set to True. Otherwise, it returns a tuple containing data and target only (default: ``False``)
 
      Attributes:
         classes (list): List of the class names sorted alphabetically.
@@ -294,6 +295,7 @@ class ImageFolder(DatasetFolder):
         loader (callable, optional): A function to load an image given its path.
         is_valid_file (callable, optional): A function that takes path of an Image file
             and check if the file is a valid file (used to check of corrupt files)
+        return_index (bool, optional): returns a tuple containing data, target, and index if return_index is set to True. Otherwise, it returns a tuple containing data and target only (default: ``False``)
 
      Attributes:
         classes (list): List of the class names sorted alphabetically.
@@ -308,6 +310,7 @@ class ImageFolder(DatasetFolder):
         target_transform: Optional[Callable] = None,
         loader: Callable[[str], Any] = default_loader,
         is_valid_file: Optional[Callable[[str], bool]] = None,
+        return_index: bool = False,
     ):
         super().__init__(
             root,
@@ -316,5 +319,6 @@ class ImageFolder(DatasetFolder):
             transform=transform,
             target_transform=target_transform,
             is_valid_file=is_valid_file,
+            return_index=return_index,
         )
         self.imgs = self.samples
