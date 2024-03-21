@@ -308,6 +308,7 @@ class ImageFolder(DatasetFolder):
         target_transform: Optional[Callable] = None,
         loader: Callable[[str], Any] = default_loader,
         is_valid_file: Optional[Callable[[str], bool]] = None,
+        return_index: bool = False,
     ):
         super().__init__(
             root,
@@ -316,5 +317,6 @@ class ImageFolder(DatasetFolder):
             transform=transform,
             target_transform=target_transform,
             is_valid_file=is_valid_file,
+            return_index=return_index,
         )
         self.imgs = self.samples
