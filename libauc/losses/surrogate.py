@@ -67,7 +67,7 @@ def barrier_hinge_loss(hparam, t):
         .. [1] Charoenphakdee, Nontawat, Jongyeong Lee, and Masashi Sugiyama. "On symmetric losses for learning from corrupted labels." International Conference on Machine Learning. PMLR, 2019.
     """
     m,s = hparam
-    loss = torch.maximum(-s * (m + t) + m, torch.maximum(m - t, s* (t - rm)))
+    loss = torch.maximum(-s * (m + t) + m, torch.maximum(m - t, s* (t - m)))
     return loss
 
 def get_surrogate_loss(loss_name='squared_hinge'):
