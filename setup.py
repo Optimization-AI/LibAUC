@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
   name="libauc",
-  version="1.3.1",
+  version="1.4.0",
   author="Zhuoning Yuan, Tianbao Yang",
   description="LibAUC: A Deep Learning Library for X-Risk Optimization",
   long_description=long_description,
@@ -14,7 +14,7 @@ setuptools.setup(
   packages=setuptools.find_packages(),
   classifiers=[
   "Programming Language :: Python :: 3",
-  "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+  "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   ],
   python_requires=">=3.8",
