@@ -787,13 +787,14 @@ class MultiLabelAUCMLoss(torch.nn.Module):
 
 class meanAveragePrecisionLoss(torch.nn.Module):
     r"""
-        Mean Average Precision loss based on squared-hinge surrogate loss to optimize mAP. This is an extension of :obj:`~libauc.losses.APLoss`.
+        Mean Average Precision loss based on squared-hinge surrogate loss to optimize mAP and mAP@k. This is an extension of :obj:`~libauc.losses.APLoss`.
         
         Args:
             data_len (int):  total number of samples in the training dataset.
             num_labels (int): number of unique labels(tasks) in the dataset.
             margin (float, optional): margin for the squared-hinge surrogate loss (default: ``1.0``).
             gamma (float, optional): parameter for the moving average estimator (default: ``0.9``).
+            top_k (int, optional): If given, only top k items will be considered for optimizing mAP@k.
             surr_loss (str, optional): type of surrogate loss to use. Choices are 'squared_hinge', 'squared', 
                                     'logistic', 'barrier_hinge' (default: ``'squared_hinge'``).
     
@@ -819,6 +820,7 @@ class meanAveragePrecisionLoss(torch.nn.Module):
                  num_labels, 
                  margin=1.0, 
                  gamma=0.9, 
+                 top_k=-1, 
                  surr_loss='squared_hinge',  
                  device=None):
         super(meanAveragePrecisionLoss, self).__init__()
@@ -833,6 +835,7 @@ class meanAveragePrecisionLoss(torch.nn.Module):
         self.margin = margin
         self.gamma = gamma
         self.surrogate_loss = get_surrogate_loss(surr_loss)
+        self.top_k = top_k
 
     def forward(self, y_pred, y_true, index, task_id=[], **kwargs):
         y_pred = check_tensor_shape(y_pred, (-1, self.num_labels))
@@ -856,6 +859,9 @@ class meanAveragePrecisionLoss(torch.nn.Module):
             self.u_all[idx][index_i] = (1 - self.gamma) * self.u_all[idx][index_i]  + self.gamma * (sur_loss.mean(1, keepdim=True)).detach()
             self.u_pos[idx][index_i] = (1 - self.gamma) * self.u_pos[idx][index_i]  + self.gamma * (pos_sur_loss.mean(1, keepdim=True)).detach()
             p_i = (self.u_pos[idx][index_i] - (self.u_all[idx][index_i]) * pos_mask) / (self.u_all[idx][index_i] ** 2) # size of p_i: len(f_ps)* len(y_pred)
+            if self.top_k > -1:
+                selector = torch.sigmoid(self.top_k - sur_loss.sum(dim=0, keepdim=True).clone())
+                p_i *= selector
             p_i.detach_()
             loss = torch.mean(p_i * sur_loss)
             total_loss += loss
