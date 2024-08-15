@@ -107,7 +107,7 @@ Tutorials
 - **Optimizing MIDAMLoss**: [[example]](https://docs.libauc.org/examples/MIDAM-att-tabular.html)
 - **Optimizing NDCGLoss**: [[example]](https://docs.libauc.org/examples/ndcg.html) 
 - **Optimizing GCLoss (Unimodal)**: [[example]](https://docs.libauc.org/examples/sogclr.html)
-- **Optimizing GCLoss (Bimodal)**: [[example]](https://docs.libauc.org/examples/isogclr.html)
+- **Optimizing GCLoss (Bimodal)**: [[example]](https://docs.libauc.org/examples/sogclr_gamma.html)
 
 <details markdown="1">
   <summary>Other Applications</summary>
