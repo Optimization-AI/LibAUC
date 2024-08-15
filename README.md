@@ -44,7 +44,6 @@ News
   
 - [2023/06/10]: **LibAUC 1.3.0 is now available!** In this update, we have made improvements and introduced new features. We also release a new documentation website at [https://docs.libauc.org/](https://docs.libauc.org/). Please see the [release notes](https://github.com/Optimization-AI/LibAUC/releases) for details.
   
-- [2023/06/10]: We value your thoughts and feedback! Please consider filling out [this brief survey](https://forms.gle/oWNtjN9kLT51CMdf9) to guide our future developments. Thank you!
 </div>
 
 Why LibAUC?
