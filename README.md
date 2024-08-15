@@ -35,7 +35,6 @@ LibAUC: A Deep Learning Library for X-Risk Optimization
 News
 --- 
 <div style="height: 100px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px;">
-
 - [2024/8/14]: **New Version is Available:**  We are releasing LibAUC 1.4.0. We offer new optimizers/losses/models and have improved some existing optimizers. For more details, please check the latest [release note](https://github.com/Optimization-AI/LibAUC/releases/).
 - [2024/04/07]: **Bugs fixed:** We fixed a bug in datasets/folder.py by returning a return_index to support SogCLR/iSogCLR for contrastive learning. Fixed incorrect communication with all_gather in GCLoss_v1 and set gamma to original value when u is not 0. None of these were in our experimental code of the paper. 
 - [2024/02/11]: **A Bug fixed:** We fixed a bug in the calculation of AUCM loss and MultiLabelAUCM loss (the margin parameter is missed in the original calculation which might cause the loss to be negative). However, it does not affect the learning as the updates are not affected by this. Both the source code and pip install are updated. 
