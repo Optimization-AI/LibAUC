@@ -2,7 +2,14 @@
   <img src="https://docs.libauc.org/_images/libauc_new_logo_v5.png" width="70%" align="center"/><br>
 </p>
 
-
+<style>
+.scrollable-list {
+    max-height: 100px; /* Adjust the height as needed */
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+}
+</style>
 
 LibAUC: A Deep Learning Library for X-Risk Optimization
 ---
@@ -34,7 +41,7 @@ LibAUC: A Deep Learning Library for X-Risk Optimization
 
 News
 --- 
-<div style="height: 100px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px;">
+<div class="scrollable-list">
 	
 - [2024/8/14]: **New Version is Available:**  We are releasing LibAUC 1.4.0. We offer new optimizers/losses/models and have improved some existing optimizers. For more details, please check the latest [release note](https://github.com/Optimization-AI/LibAUC/releases/).
   
