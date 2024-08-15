@@ -2,14 +2,6 @@
   <img src="https://docs.libauc.org/_images/libauc_new_logo_v5.png" width="70%" align="center"/><br>
 </p>
 
-<style>
-.scrollable-list {
-    max-height: 100px; /* Adjust the height as needed */
-    overflow-y: auto;
-    border: 1px solid #ccc;
-    padding: 10px;
-}
-</style>
 
 LibAUC: A Deep Learning Library for X-Risk Optimization
 ---
