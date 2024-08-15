@@ -33,7 +33,6 @@ LibAUC: A Deep Learning Library for X-Risk Optimization
 
 News
 --- 
-<div class="scrollable-list">
 	
 - [2024/8/14]: **New Version is Available:**  We are releasing LibAUC 1.4.0. We offer new optimizers/losses/models and have improved some existing optimizers. For more details, please check the latest [release note](https://github.com/Optimization-AI/LibAUC/releases/).
   
@@ -43,7 +42,6 @@ News
   
 - [2023/06/10]: **LibAUC 1.3.0 is now available!** In this update, we have made improvements and introduced new features. We also release a new documentation website at [https://docs.libauc.org/](https://docs.libauc.org/). Please see the [release notes](https://github.com/Optimization-AI/LibAUC/releases) for details.
   
-</div>
 
 Why LibAUC?
 ---
