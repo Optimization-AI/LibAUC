@@ -53,8 +53,9 @@ class AUCMLoss(torch.nn.Module):
 
         args:
             margin (float): margin for squared-hinge surrogate loss (default: ``1.0``).
-            imratio (float, optional): the ratio of the number of positive samples to the number of total samples in the training dataset. 
-                                       If this value is not given, the mini-batch statistics will be used instead.
+            imratio (float, optional): the ratio of the number of positive samples to the number of total samples in the training dataset, i.e., :math:`p` in the above formulation. 
+                                        If this value is not given, it will be automatically calculated with mini-batch samples. 
+                                        This value is ignored when ``version`` is set to ``'v2'``.
             version (str, optional): whether to include prior :math:`p` in the objective function (default: ``'v1'``).
            
 
@@ -65,13 +66,12 @@ class AUCMLoss(torch.nn.Module):
             >>> loss = loss_fn(preds, target)
             >>> loss.backward()
 
-        .. note::
-            To use ``v2`` of AUCMLoss, plesae set ``version='v2'``. Otherwise, the default version is ``v1``. The ``v2`` version requires the use of :obj:`~libauc.sampler.DualSampler`.
 
         .. note::
             Practial Tips: 
 
-            - ``epoch_decay`` is a regularization parameter similar to `weight_decay` that can be tuned in the same range.
+            - It is recommended to use ``v2`` of AUCMLoss by setting ``version='v2'`` to get better performance. The ``v2`` version requires the use of :obj:`~libauc.sampler.DualSampler`.
+            - ``epoch_decay`` is a regularization parameter similar to `weight_decay` that can be tuned in the same range. 
             - For complex tasks, it is recommended to use regular loss to pretrain the model, and then switch to AUCMLoss for finetuning with a smaller learning rate. 
 
         Reference:
@@ -140,7 +140,9 @@ class CompositionalAUCLoss(torch.nn.Module):
 
         args:
             margin (float): margin for squared-hinge surrogate loss (default: ``1.0``).
-            imratio (float, optional): the ratio of the number of positive samples to the number of total samples in the training dataset. If this value is not given, the mini-batch statistics will be used instead.
+            imratio (float, optional): the ratio of the number of positive samples to the number of total samples in the training dataset, i.e., :math:`p` in the above formulation. 
+                                        If this value is not given, it will be automatically calculated with mini-batch samples. 
+                                        This value is ignored when ``version`` is set to ``'v2'``.            
             k (int, optional): number of steps for inner updates. For example, when k is set to 2, the optimizer will alternately execute two steps optimizing :obj:`~libauc.losses.losses.CrossEntropyLoss` followed by a single step optimizing :obj:`~libauc.losses.auc.AUCMLoss` during training (default: ``1``).
             version (str, optional): whether to include prior :math:`p` in the objective function (default: ``'v1'``).
      
@@ -152,7 +154,8 @@ class CompositionalAUCLoss(torch.nn.Module):
             >>> loss.backward()    
 
         .. note::
-            As CompositionalAUCLoss is built on AUCMLoss, there are also two versions of CompositionalAUCLoss. To use ``v2`` version, plesae set ``version='v2'``. Otherwise, the default version is ``v1``. 
+            As CompositionalAUCLoss is built on AUCMLoss, there are also two versions of CompositionalAUCLoss.
+            It is recommended to use ``v2`` version by setting ``version='v2'`` to get better performance.
 
         .. note::
 
@@ -173,8 +176,8 @@ class CompositionalAUCLoss(torch.nn.Module):
                  version='v1',
                  imratio=None, 
                  backend='ce', 
-                 l_avg=None,   # todo: loss placeholder
-                 l_imb=None,   # todo: loss placeholder
+                #  l_avg=None,   # todo: loss placeholder
+                #  l_imb=None,   # todo: loss placeholder
                  device=None):
         super(CompositionalAUCLoss, self).__init__()
         if not device:
@@ -232,7 +235,7 @@ class CompositionalAUCLoss(torch.nn.Module):
   
 class AveragePrecisionLoss(torch.nn.Module):
     r"""
-        Average Precision loss with squared-hinge surrogate loss for optimizing AUPRC. The objective is defined as  
+        Average Precision loss with chosen surrogate loss for optimizing AUPRC. The objective is defined as  
         
         .. math::
         
@@ -794,14 +797,14 @@ class meanAveragePrecisionLoss(torch.nn.Module):
             num_labels (int): number of unique labels(tasks) in the dataset.
             margin (float, optional): margin for the squared-hinge surrogate loss (default: ``1.0``).
             gamma (float, optional): parameter for the moving average estimator (default: ``0.9``).
-            top_k (int, optional): If given, only top k items will be considered for optimizing mAP@k.
+            top_k (int, optional): mAP@k optimization is activated if top_k > 0; top_k=-1 represents mAP (default: ``-1``).
             surr_loss (str, optional): type of surrogate loss to use. Choices are 'squared_hinge', 'squared', 
                                     'logistic', 'barrier_hinge' (default: ``'squared_hinge'``).
     
         This class is also aliased as :obj:`~libauc.losses.auc.mAPLoss`.
 
         Example:
-            >>> loss_fn = meanAveragePrecisionLoss(data_len=data_length, margin=1.0, num_labels=10, gamma=0.9)
+            >>> loss_fn = meanAveragePrecisionLoss(data_len=data_length, margin=1.0, num_labels=10, gamma=0.9, top_k=-1)
             >>> y_pred = torch.randn((32,10), requires_grad=True)
             >>> y_true = torch.empty((32,10), dtype=torch.long).random_(2)
             >>> index = torch.randint(32, (32,), requires_grad=False)
