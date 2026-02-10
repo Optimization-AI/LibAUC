@@ -4,9 +4,16 @@ import torch
 import torchvision
 from torch.utils.data.sampler import Sampler
 
+import torch.distributed as dist
+
+def is_distributed():
+    if dist.is_available() and dist.is_initialized():
+        return dist.get_world_size() > 1
+
 __all__ = [
         'ControlledDataSampler', 
         'DualSampler',
+        'DistributedDualSampler',
         'TriSampler']
 
 class ControlledDataSampler(Sampler):
@@ -242,7 +249,117 @@ class DualSampler(ControlledDataSampler):
 
     def __len__ (self):
         return len(self.sampled)
+
+class DistributedDualSampler(ControlledDataSampler):
+    r"""
+        Dual Sampler aims to customize the number of positives and negatives in mini-batch data for binary classification tasks. 
+        For more details, please refer to LibAUC paper[1]_.
+
+        Args:
+            dataset (torch.utils.data.Dataset): pytorch dataset object for training or evaluation.
+            batch_size (int): number of samples per mini-batch.
+            sampling_rate (float): the ratio of number of positive samples to total number of samples per task in a mini-batch (default: ``0.5``).
+            num_pos (int, optional): number of positive samples in a batch (default: ``None``).
+            labels (list or array, optional): A list or array of labels for the dataset (default: ``None``).
+            shuffle (bool): Whether to shuffle the data before sampling mini-batch data (default: ``True``).
+            num_sampled_tasks (int): number of sampled tasks from original dataset. If None is given, then all labels (tasks) are used for training (default: ``None``).
+            random_seed (int): random seed for reproducibility (default: ``2023``).
+
+        Example:
+            >>> sampler = libauc.sampler.DualSampler(trainSet, batch_size=32, sampling_rate=0.5)
+            >>> trainloader = torch.utils.data.DataLoader(trainSet, batch_size=32, sampler=sampler, shuffle=False)
+            >>> data, targets, index = next(iter(trainloader))
+
+
+        .. note::
+
+            Practical Tips: 
+
+            - In `DualSampler`, ``num_pos`` is equivalent to ``int(sampling_rate * batch_size)``. You can choose to use ``num_pos`` if you want to define the exact number of positive samples per mini-batch. Otherwise, ``sampling_rate`` will be the required parameter by default.
+            - For ``sampling_rate``, we recommended to set a value slightly higher than the proportion of positive samples in your training dataset. For instance, if the ratio of positive sample in your dataset is 0.01, you might consider setting ``sampling_rate`` to 0.05, 0.1, or 0.2.
+
+        Reference:
+            .. [1] Zhuoning Yuan, Dixian Zhu, Zi-Hao Qiu, Gang Li, Xuanhui Wang, Tianbao Yang.
+               "LibAUC: A Deep Learning Library for X-Risk Optimization."
+               29th SIGKDD Conference on Knowledge Discovery and Data Mining.
+               https://arxiv.org/abs/2306.03065
+
+    """
+    def __init__(self, 
+                  dataset, 
+                  batch_size_per_gpu, 
+                  labels=None, 
+                  shuffle=True, 
+                  num_pos=None,  
+                  num_sampled_tasks=None, 
+                  sampling_rate=0.5,
+                  random_seed=2023):
+        ### dist
+        assert is_distributed()==True, "Distributed training need to be enabled"
+        self.rank = dist.get_rank()
+        self.num_replicas = dist.get_world_size()
+        batch_size = batch_size_per_gpu * self.num_replicas
+
+        super().__init__(dataset, batch_size, labels, shuffle, num_pos, num_sampled_tasks, sampling_rate, random_seed)
+        
+        assert self.total_tasks > 1, 'Labels are not binary, e.g., [0, 1]!'
+        self.pos_len = self.class_counts[0][0]
+        self.neg_len = self.class_counts[0][1]
+        self.pos_indices, self.neg_indices = self.pos_indices[0], self.neg_indices[0]
+        self.epoch = 0
+        
+        np.random.seed(self.random_seed + self.epoch)
+        if shuffle:
+            np.random.shuffle(self.pos_indices)
+            np.random.shuffle(self.neg_indices)
+
+        self.num_batches = max(self.pos_len//self.num_pos, self.neg_len//self.num_neg)
+        self.pos_ptr, self.neg_ptr = 0, 0
+        self.sampled = np.zeros(self.num_batches*self.batch_size, dtype=np.int64)
+        
+    def __iter__(self):
+        self.sampled = np.zeros(self.num_batches*self.batch_size, dtype=np.int64)
+        for i in range(self.num_batches):
+            start_index = i*self.batch_size
+            if self.pos_ptr+self.num_pos > self.pos_len:
+                # TODO: edge case - dataset has very limited positive samples e.g., < half of batch size
+                temp = self.pos_indices[self.pos_ptr:]
+                np.random.seed(self.random_seed + self.epoch)
+                np.random.shuffle(self.pos_indices)
+                self.pos_ptr = (self.pos_ptr+self.num_pos)%self.pos_len
+                self.sampled[start_index:start_index+self.num_pos] = np.concatenate((temp, self.pos_indices[:self.pos_ptr]))
+            else:
+                self.sampled[start_index:start_index+self.num_pos]= self.pos_indices[self.pos_ptr:self.pos_ptr+self.num_pos]
+                self.pos_ptr += self.num_pos
+            start_index += self.num_pos
+            if self.neg_ptr+self.num_neg > self.neg_len:
+                temp = self.neg_indices[self.neg_ptr:]
+                np.random.seed(self.random_seed + self.epoch)
+                np.random.shuffle(self.neg_indices)
+                self.neg_ptr = (self.neg_ptr+self.num_neg)%self.neg_len
+                self.sampled[start_index:start_index+self.num_neg] = np.concatenate((temp, self.neg_indices[:self.neg_ptr]))
+            else:
+                self.sampled[start_index:start_index+self.num_neg] = self.neg_indices[self.neg_ptr:self.neg_ptr+self.num_neg]
+                self.neg_ptr += self.num_neg    
+
+        self.sampled = self.sampled[self.rank : self.num_batches*self.batch_size : self.num_replicas]
+
+        return iter(self.sampled)
+
+    def __len__ (self):
+        return len(self.sampled)  
     
+    def set_epoch(self, epoch: int) -> None:
+        r"""
+        Set the epoch for this sampler.
+
+        This ensures all replicas use a different random ordering for each epoch. 
+        Otherwise, the next iteration of this sampler will yield the same ordering.
+
+        Args:
+            epoch (int): Epoch number.
+        """
+        self.epoch = epoch
     
 class TriSampler(ControlledDataSampler):
     r"""

@@ -1,6 +1,7 @@
 import warnings
 import torch 
 import torch.nn.functional as F
+import torch.distributed as dist
 from .surrogate import get_surrogate_loss
 from ..utils.utils import check_tensor_shape
 
@@ -21,7 +22,10 @@ __all__ = ['AUCMLoss',
            'mPAUCLoss',
            ]
 
-
+def is_distributed():
+    if dist.is_available() and dist.is_initialized():
+        return dist.get_world_size() > 1
+    
 class AUCMLoss(torch.nn.Module):
     r"""
         AUC-Margin loss with squared-hinge surrogate loss for optimizing AUROC. The objective function is defined as:
@@ -307,11 +311,17 @@ class AveragePrecisionLoss(torch.nn.Module):
         self.margin = margin
         self.gamma = gamma
         self.surrogate_loss = get_surrogate_loss(surr_loss)
+        self.distributed = is_distributed()
         
     def forward(self, y_pred, y_true, index, **kwargs): 
         y_pred = check_tensor_shape(y_pred, (-1, 1))
         y_true = check_tensor_shape(y_true, (-1, 1))
         index  = check_tensor_shape(index, (-1,))
+        if self.distributed:
+            y_pred = torch.cat(torch.distributed.nn.all_gather(y_pred), dim=0)
+            y_true = torch.cat(torch.distributed.nn.all_gather(y_true), dim=0)
+            index = torch.cat(torch.distributed.nn.all_gather(index), dim=0)
+
         pos_mask = (y_true == 1).squeeze()
         assert sum(pos_mask) > 0, "Input data has no positive sample! Please use 'libauc.sampler.DualSampler' for data resampling!"
         if len(index) == len(y_pred): 

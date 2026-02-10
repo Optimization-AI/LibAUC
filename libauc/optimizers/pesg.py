@@ -1,5 +1,10 @@
 import torch 
 import math 
+import torch.distributed as dist
+
+def is_distributed():
+    if dist.is_available() and dist.is_initialized():
+        return dist.get_world_size() > 1
 
 class PESG(torch.optim.Optimizer):
     r"""
@@ -121,6 +126,9 @@ class PESG(torch.optim.Optimizer):
         self.T = 0                # for epoch_decay
         self.steps = 0            # total optimization steps
         self.verbose = verbose    # print updates for lr/regularizer
+        if is_distributed():
+            self.distributed = True
+            self.world_size = torch.distributed.get_world_size()
     
         assert self.mode in ['adam', 'sgd'], "Keyword is not found in [`adam`, `sgd`]!"
        
@@ -209,6 +217,10 @@ class PESG(torch.optim.Optimizer):
                 for i, p in enumerate(group['params']):
                     if p.grad is None:
                         continue
+                    if self.distributed:
+                        if (p is a) or (p is b): 
+                            torch.distributed.all_reduce(p.grad)
+                            p.grad.div_(self.world_size)
                     if epoch_decay > 0:
                         d_p = torch.clamp(p.grad.data , -clip_value, clip_value) + epoch_decay*(p.data - model_ref[i].data) + weight_decay*p.data
                     else:
@@ -229,6 +241,10 @@ class PESG(torch.optim.Optimizer):
                 for i, p in enumerate(group['params']):
                     if p.grad is None:
                         continue
+                    if self.distributed:
+                        if (p is a) or (p is b): 
+                            torch.distributed.all_reduce(p.grad)
+                            p.grad.div_(self.world_size)
                     if epoch_decay > 0:
                         grad = torch.clamp(p.grad.data , -clip_value, clip_value) + epoch_decay*(p.data - model_ref[i].data) + weight_decay*p.data
                     else:
