@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/libauc-new-logo.png" width="70%" align="center"/><br>
+  <img src="imgs/libauc-new-logo.png" width="70%" align="center"/><br>
 </p>
 
 
