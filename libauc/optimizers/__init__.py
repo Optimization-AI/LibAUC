@@ -9,6 +9,7 @@ from .song import *
 from .sogclr import *
 from .isogclr import *
 from .midam import *
+from .scent import *
 
 # PyTorch optimizers
 from .sgd import *
