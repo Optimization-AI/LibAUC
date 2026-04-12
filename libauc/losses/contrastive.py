@@ -159,8 +159,8 @@ class GCLoss_v1(nn.Module):
 
         if self.enable_isogclr:
             tau = self.learnable_tau[index].cuda()
-            neg_logits1 = torch.exp(logits_ab_aa/tau[:, None])*neg_mask   #(B, 2B)
-            neg_logits2 = torch.exp(logits_ba_bb/tau[:, None])*neg_mask
+            neg_logits1 = torch.exp(logits_ab_aa/tau)*neg_mask   #(B, 2B)
+            neg_logits2 = torch.exp(logits_ba_bb/tau)*neg_mask
 
         else:
             neg_logits1 = torch.exp(logits_ab_aa/self.tau)*neg_mask   #(B, 2B)
@@ -199,8 +199,8 @@ class GCLoss_v1(nn.Module):
 
         if self.enable_isogclr:
             # update learnable temperature parameters
-            grad_tau_a = torch.log(u1) + self.rho - torch.sum(p_neg_weights1 * (logits_ab_aa/tau[:, None]).detach(), dim=1, keepdim=True)/(2*(batch_size-1))
-            grad_tau_b = torch.log(u2) + self.rho - torch.sum(p_neg_weights2 * (logits_ba_bb/tau[:, None]).detach(), dim=1, keepdim=True)/(2*(batch_size-1))
+            grad_tau_a = torch.log(u1) + self.rho - torch.sum(p_neg_weights1 * (logits_ab_aa/tau).detach(), dim=1, keepdim=True)/(2*(batch_size-1))
+            grad_tau_b = torch.log(u2) + self.rho - torch.sum(p_neg_weights2 * (logits_ba_bb/tau).detach(), dim=1, keepdim=True)/(2*(batch_size-1))
 
             grad_tau = (grad_tau_a + grad_tau_b) / 2.0
 
