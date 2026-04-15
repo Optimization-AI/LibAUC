@@ -10,6 +10,7 @@ from .sogclr import *
 from .isogclr import *
 from .midam import *
 from .scent import *
+from .staco import *
 
 # PyTorch optimizers
 from .sgd import *

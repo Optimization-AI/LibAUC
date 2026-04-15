@@ -668,7 +668,130 @@ class pAUCLoss(torch.nn.Module):
    
     def forward(self, y_pred, y_true, index, **kwargs):
         return self.loss_fn(y_pred, y_true, index, **kwargs)
-    
+
+class tpAUC_CVaR_loss(torch.nn.Module):
+
+    r"""
+        Exact Partial AUC loss based on DRO-CVaR to optimize two-way partial AUROC. The objective function is defined as:
+        .. math::
+            \min_{w,s',s} \frac{1}{n_+} \sum_{x_i\in \mathcal{S}_+} f_i(g_i(w, s^{(i)}), s'), 
+        where :math:`s = (s^{(1)}, \cdots , s^{(n_+)})^\top`, :math:`f_i(g,s')=s'+\frac{1}{\theta_0}[g-s']_+`, and :math:`g_i(w,s^{(i)})= \frac{1}{n_-}\sum_{x_j \in S_-} s^{(i)}+\frac{[\ell(h_{w}(x_j)-h_{w}(x_i))-s^{(i)}]_+}{\theta_1}`. Since :math:`[t]_+=\max_{y\in[0,1]}ty`, we cast above problem into an equivalent min-max problem:
+        .. math::
+            \min_{w\in\mathbb{R}^d,s'\in\mathbb{R}\atop s\in\mathbb{R}^{n_+}}\max_{y\in[0,1]^{n_+}} \frac{1}{n_+} \sum_{x_i\in \mathcal{S}_+} y^{(i)} \cdot \frac{g_i(w,s^{(i)})-s'}{\theta_0} + s'.
+        where :math:`w` is the model parameters, :math:`s'` is the threshold for positive samples, :math:`s` is the threshold for negative samples, :math:`\theta_0` is the rate parameter for TPR, :math:`\theta_1` is the rate parameter for FPR, :math:`n_+` is the number of positive samples, :math:`n_-` is the number of negative samples, :math:`\mathcal{S}_+` is the set of positive samples, :math:`\mathcal{S}_-` is the set of negative samples, :math:`h_{w}` is the model function, :math:`\ell` is the surrogate loss function, :math:`[t]_+=\max_{y\in[0,1]}ty`.
+
+        Args:
+            data_length (int): number of positive samples in the training dataset.
+            threshold (float, optional): margin term for squared-hinge surrogate loss (default: ``0.5``).
+            alpha (float, optional): step size for updating dual variable (default: ``1e-1``).
+            beta_0 (float, optional): step size for updating s1 (default: ``1e-1``).
+            beta_1 (float, optional): step size for updating s2 (default: ``1e-1``).
+            theta_0 (float, optional): the rate parameter for TPR (default: ``0.5``).
+            theta_1 (float, optional): the rate parameter for FPR (default: ``0.5``).
+            surr_loss (string, optional): surrogate loss used in the problem formulation (default: ``'squared_hinge'``).
+            device (torch.device, optional): the device used for optimization, e.g., 'cpu' or 'cuda' (default: ``None``).
+
+        Example:
+            >>> loss_fn = tpAUC_CVaR_loss(data_length=1000, alpha=1e-1, beta_0=1e-1, beta_1=1e-1, theta_0=0.5, theta_1=0.5)
+            >>> y_pred = torch.randn(32, 1, requires_grad=True)
+            >>> y_true = torch.randint(0, 2, (32,))
+            >>> index = torch.arange(32)  # dataset index per sample (or positive-only ids, len=#positives)
+            >>> loss = loss_fn(y_pred, y_true, index)
+            >>> loss.backward()
+
+        .. note::
+           To use :class:`~libauc.losses.tpAUC_CVaR_loss`, we need to track index for each sample in the training dataset. To do so, see the example below:
+
+           .. code-block:: python
+
+               class SampleDataset (torch.utils.data.Dataset):
+                    def __init__(self, inputs, targets):
+                        self.inputs = inputs
+                        self.targets = targets
+                    def __len__ (self) :
+                        return len(self.inputs)
+                    def __getitem__ (self, index):
+                        data = self.inputs[index]
+                        target = self.targets[index]
+                        return data, target, index
+
+        .. note::
+            Practical tips: 
+
+            - ``margin`` can be tuned in ``{0.1, 0.3, 0.5, 0.7, 0.9, 1.0}`` for better performance.
+            - ``theta_0`` and ``theta_1`` can be tuned in the range (0.0, 1.0) for better performance.
+
+        Reference:
+            .. [6] Zhou, L., Wang, B., Thai, M. T., & Yang, T. (2025). 
+            Stochastic Primal-Dual Double Block-Coordinate for Two-way Partial AUC Maximization. 
+            Transactions on Machine Learning Research.
+            https://openreview.net/forum?id=M3kibBFP4q
+
+    """
+    def __init__(self, 
+                 data_length, 
+                 threshold=0.5, 
+                 alpha=1e-1, 
+                 beta_0=1e-1, 
+                 beta_1=1e-1, 
+                 theta_0=0.5, 
+                 theta_1=0.5,
+                 surr_loss='squared',
+                 device=None):
+        super(tpAUC_CVaR_loss, self).__init__()
+        if not device:
+            self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        else:
+            self.device = device   
+        self.beta_0 = beta_0
+        self.beta_1 = beta_1
+        self.alpha = alpha
+        self.data_length = data_length
+        self.theta_0 = theta_0
+        self.theta_1 = theta_1
+        self.u = torch.tensor([1.0]*data_length).view(-1, 1).to(self.device) 
+        self.s1 = torch.tensor([0.0]*data_length).view(-1, 1).to(self.device) 
+        self.s2 = torch.tensor([0.0]).view(-1, 1).to(self.device) 
+        self.dual_var = torch.tensor([1.0]*data_length).view(-1, 1).to(self.device)
+        self.threshold = threshold
+        self.surrogate_loss = get_surrogate_loss(surr_loss)
+        self.distributed = is_distributed()
+
+    def forward(self, y_pred, y_true, index): 
+
+        if self.distributed:
+            y_pred = torch.cat(torch.distributed.nn.all_gather(y_pred), dim=0)
+            y_true = torch.cat(torch.distributed.nn.all_gather(y_true), dim=0)
+            index = torch.cat(torch.distributed.nn.all_gather(index), dim=0)
+
+        y_true = y_true.reshape(-1)
+        index = index.reshape(-1)
+
+        if len(index) ==len(y_pred): 
+            ids_p = index[y_true==1]   # indices for positive samples only 
+
+        v_p = y_pred[y_true==1].view(-1,1)
+        v_n = y_pred[y_true==0].view(1,-1)
+        mat_n = v_n.repeat(len(v_p), 1)
+        loss = self.surrogate_loss(self.threshold, v_p - mat_n)
+
+        p1 = (loss.detach() > self.s1[ids_p]).float()
+        tp_loss = ((loss)/self.theta_1*p1).mean(dim=-1,keepdim=True)
+        tp_loss = (tp_loss/self.theta_0)
+
+        comp_u = self.s1[ids_p] + torch.clip(loss.detach()-self.s1[ids_p], min=0)/self.theta_1
+        comp_u = comp_u.mean(dim=-1, keepdim=True)
+        self.u[ids_p] = comp_u
+
+        self.dual_var[ids_p] = torch.clamp(self.dual_var[ids_p] + self.alpha * (self.u[ids_p]-self.s2)/self.theta_0,
+                                                        min=0.0,
+                                                        max=1)
+        
+        weighted_loss = torch.mean(self.dual_var[ids_p] * tp_loss)
+        self.s1[ids_p] -= self.beta_0*(self.dual_var[ids_p]/self.theta_0*(1-p1.mean(dim=-1, keepdim=True)/self.theta_1))
+        self.s2 -= self.beta_1 * (1-torch.mean(self.dual_var[ids_p])/self.theta_0)
+
+        return weighted_loss
     
 class PairwiseAUCLoss(torch.nn.Module): 
     r"""
