@@ -227,11 +227,11 @@ class DualSampler(ControlledDataSampler):
         for i in range(self.num_batches):
             start_index = i*self.batch_size
             if self.pos_ptr+self.num_pos > self.pos_len:
-                # TODO: edge case - dataset has very limited positive samples e.g., < half of batch size
                 temp = self.pos_indices[self.pos_ptr:]
+                loops = (self.num_pos - self.pos_len + self.pos_ptr) // self.pos_len
                 np.random.shuffle(self.pos_indices)
                 self.pos_ptr = (self.pos_ptr+self.num_pos)%self.pos_len
-                self.sampled[start_index:start_index+self.num_pos] = np.concatenate((temp, self.pos_indices[:self.pos_ptr]))
+                self.sampled[start_index:start_index+self.num_pos] = np.concatenate((temp, np.tile(self.pos_indices, loops), self.pos_indices[:self.pos_ptr]))
             else:
                 self.sampled[start_index:start_index+self.num_pos]= self.pos_indices[self.pos_ptr:self.pos_ptr+self.num_pos]
                 self.pos_ptr += self.num_pos
@@ -322,12 +322,12 @@ class DistributedDualSampler(ControlledDataSampler):
         for i in range(self.num_batches):
             start_index = i*self.batch_size
             if self.pos_ptr+self.num_pos > self.pos_len:
-                # TODO: edge case - dataset has very limited positive samples e.g., < half of batch size
                 temp = self.pos_indices[self.pos_ptr:]
+                loops = (self.num_pos - self.pos_len + self.pos_ptr) // self.pos_len
                 np.random.seed(self.random_seed + self.epoch)
                 np.random.shuffle(self.pos_indices)
                 self.pos_ptr = (self.pos_ptr+self.num_pos)%self.pos_len
-                self.sampled[start_index:start_index+self.num_pos] = np.concatenate((temp, self.pos_indices[:self.pos_ptr]))
+                self.sampled[start_index:start_index+self.num_pos] = np.concatenate((temp, np.tile(self.pos_indices, loops), self.pos_indices[:self.pos_ptr]))
             else:
                 self.sampled[start_index:start_index+self.num_pos]= self.pos_indices[self.pos_ptr:self.pos_ptr+self.num_pos]
                 self.pos_ptr += self.num_pos
@@ -484,7 +484,8 @@ class TriSampler(ControlledDataSampler):
                     temp = self.pos_indices[task_id][self.pos_ptr[task_id]:]
                     np.random.shuffle(self.pos_indices[task_id])
                     self.pos_ptr[task_id] = (self.pos_ptr[task_id]+self.num_pos)%self.pos_len[task_id]
-                    pos_list = np.concatenate((temp, self.pos_indices[task_id][:self.pos_ptr[task_id]]))
+                    loops = (self.num_pos - self.pos_len[task_id] + self.pos_ptr[task_id]) // self.pos_len[task_id]
+                    pos_list = np.concatenate((temp, np.tile(self.pos_indices[task_id], loops), self.pos_indices[task_id][:self.pos_ptr[task_id]]))
                 else:
                     pos_list = self.pos_indices[task_id][self.pos_ptr[task_id]:self.pos_ptr[task_id]+self.num_pos]
                     self.pos_ptr[task_id] += self.num_pos
