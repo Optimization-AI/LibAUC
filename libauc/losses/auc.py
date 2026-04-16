@@ -98,9 +98,30 @@ class AUCMLoss(torch.nn.Module):
         self.p = imratio
         self.version = version
         assert version in ['v1', 'v2'], "Input value is not valid! Possible values are ['v1', 'v2']."
-        self.a = torch.zeros(1, dtype=torch.float32, device=self.device, requires_grad=True)
-        self.b = torch.zeros(1, dtype=torch.float32, device=self.device,  requires_grad=True) 
-        self.alpha = torch.zeros(1, dtype=torch.float32, device=self.device, requires_grad=True)
+        self.a = torch.nn.Parameter(torch.zeros(1, dtype=torch.float32)).to(self.device)
+        self.b = torch.nn.Parameter(torch.zeros(1, dtype=torch.float32, device=self.device)).to(self.device)
+        self.alpha = torch.nn.Parameter(torch.zeros(1, dtype=torch.float32, device=self.device)).to(self.device)
+
+    def load_state_dict(self, state_dict, strict=True):
+        param_keys = ['a', 'b', 'alpha']
+        remaining_state = {}
+        for key, value in state_dict.items():
+            if key in param_keys:
+                getattr(self, key).data.copy_(value)
+            else:
+                remaining_state[key] = value
+        
+        if remaining_state:
+            super().load_state_dict(remaining_state, strict=strict)
+        elif strict:
+            expected_keys = set(self.state_dict().keys())
+            provided_keys = set(state_dict.keys())
+            missing = expected_keys - provided_keys
+            unexpected = provided_keys - expected_keys
+            if missing:
+                raise RuntimeError(f"Missing keys in state_dict: {missing}")
+            if unexpected:
+                raise RuntimeError(f"Unexpected keys in state_dict: {unexpected}")
 
     def mean(self, tensor):
         return torch.sum(tensor)/torch.count_nonzero(tensor)
@@ -193,13 +214,34 @@ class CompositionalAUCLoss(torch.nn.Module):
         self.p = imratio
         self.version = version
         assert version in ['v1', 'v2'], "Input value is not valid! Possible values are ['v1', 'v2']."
-        self.a = torch.zeros(1, dtype=torch.float32, device=self.device, requires_grad=True).to(self.device) 
-        self.b = torch.zeros(1, dtype=torch.float32, device=self.device,  requires_grad=True).to(self.device) 
-        self.alpha = torch.zeros(1, dtype=torch.float32, device=self.device, requires_grad=True).to(self.device) 
+        self.a = torch.nn.Parameter(torch.zeros(1, dtype=torch.float32)).to(self.device)
+        self.b = torch.nn.Parameter(torch.zeros(1, dtype=torch.float32)).to(self.device)
+        self.alpha = torch.nn.Parameter(torch.zeros(1, dtype=torch.float32)).to(self.device)
         self.L_AVG = F.binary_cross_entropy 
         self.backend = backend  
         self.k = k
         self.step = 0
+    
+    def load_state_dict(self, state_dict, strict=True):          # added — mirrors AUCMLoss
+        param_keys = ['a', 'b', 'alpha']
+        remaining_state = {}
+        for key, value in state_dict.items():
+            if key in param_keys:
+                getattr(self, key).data.copy_(value)
+            else:
+                remaining_state[key] = value
+
+        if remaining_state:
+            super().load_state_dict(remaining_state, strict=strict)
+        elif strict:
+            expected_keys = set(self.state_dict().keys())
+            provided_keys = set(state_dict.keys())
+            missing = expected_keys - provided_keys
+            unexpected = provided_keys - expected_keys
+            if missing:
+                raise RuntimeError(f"Missing keys in state_dict: {missing}")
+            if unexpected:
+                raise RuntimeError(f"Unexpected keys in state_dict: {unexpected}")
         
  
     def mean(self, tensor):

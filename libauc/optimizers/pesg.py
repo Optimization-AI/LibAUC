@@ -180,6 +180,55 @@ class PESG(torch.optim.Optimizer):
                model_acc.append(torch.zeros(var.shape, dtype=torch.float32,  device=self.device, requires_grad=False).to(self.device)) 
         return model_acc
     
+    def state_dict(self):
+        state_dict = super(PESG, self).state_dict()
+        state_dict['model_ref'] = self.model_ref
+        state_dict['model_acc'] = self.model_acc 
+        state_dict['T'] = self.T
+        state_dict['steps'] = self.steps
+        return state_dict
+    
+    def load_state_dict(self, state_dict):
+        # Extract custom state
+        model_ref = state_dict.pop('model_ref', None)
+        model_acc = state_dict.pop('model_acc', None)
+        T = state_dict.pop('T', 0)
+        steps = state_dict.pop('steps', 0)
+        
+        super(PESG, self).load_state_dict(state_dict)
+        
+        epoch_decay = self.param_groups[0].get('epoch_decay', 0) if self.param_groups else 0
+        
+        if model_ref is not None:
+            if self.model_ref is None:
+                # Initialize if not already initialized
+                self.model_ref = self.__init_model_ref__(self.params) if epoch_decay > 0 else None
+            if self.model_ref is not None:
+                # Copy values from saved state
+                for i, ref_tensor in enumerate(model_ref):
+                    if i < len(self.model_ref):
+                        self.model_ref[i].data.copy_(ref_tensor.data)
+        
+        if model_acc is not None:
+            if self.model_acc is None:
+                # Initialize if not already initialized
+                self.model_acc = self.__init_model_acc__(self.params) if epoch_decay > 0 else None
+            if self.model_acc is not None:
+                # Copy values from saved state
+                for i, acc_tensor in enumerate(model_acc):
+                    if i < len(self.model_acc):
+                        self.model_acc[i].data.copy_(acc_tensor.data)
+        
+        for group in self.param_groups:
+            group['model_ref'] = self.model_ref
+            group['model_acc'] = self.model_acc
+            group['a'] = self.a
+            group['b'] = self.b
+            group['alpha'] = self.alpha
+        
+        self.T = T
+        self.steps = steps
+    
     @property    
     def optim_step(self):
         r"""Return the number of optimization steps."""
