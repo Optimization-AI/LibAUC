@@ -693,7 +693,7 @@ class pAUCLoss(torch.nn.Module):
     """
     def __init__(self, mode='1w', **kwargs):
         super(pAUCLoss, self).__init__()
-        assert mode in ['SOPA', 'SOPAs', 'SOTAs', '1w', '2w'], 'Loss is not implemented!'  
+        assert mode in ['SOPA', 'SOPAs', 'SOTAs', 'STACO', '1w', '2w'], 'Loss is not implemented!'  
         self.mode = mode 
         self.loss_fn = self.get_loss(mode, **kwargs)
                                        
@@ -704,6 +704,8 @@ class pAUCLoss(torch.nn.Module):
            loss = pAUC_DRO_Loss(**kwargs)
         elif mode == 'SOTAs' or mode=='2w':
            loss = tpAUC_KL_Loss(**kwargs)
+        elif mode == 'STACO':
+           loss = tpAUC_CVaR_loss(**kwargs)
         else:
             raise ValueError('Out of options!')
         return loss
@@ -778,7 +780,7 @@ class tpAUC_CVaR_loss(torch.nn.Module):
                  beta_1=1e-1, 
                  theta_0=0.5, 
                  theta_1=0.5,
-                 surr_loss='squared',
+                 surr_loss='squared_hinge',
                  device=None):
         super(tpAUC_CVaR_loss, self).__init__()
         if not device:
@@ -788,14 +790,14 @@ class tpAUC_CVaR_loss(torch.nn.Module):
         self.beta_0 = beta_0
         self.beta_1 = beta_1
         self.alpha = alpha
-        self.data_length = data_length
+        self.data_len = data_length
         self.theta_0 = theta_0
         self.theta_1 = theta_1
         self.u = torch.tensor([1.0]*data_length).view(-1, 1).to(self.device) 
         self.s1 = torch.tensor([0.0]*data_length).view(-1, 1).to(self.device) 
         self.s2 = torch.tensor([0.0]).view(-1, 1).to(self.device) 
         self.dual_var = torch.tensor([1.0]*data_length).view(-1, 1).to(self.device)
-        self.threshold = threshold
+        self.margin = threshold
         self.surrogate_loss = get_surrogate_loss(surr_loss)
         self.distributed = is_distributed()
 
@@ -815,7 +817,7 @@ class tpAUC_CVaR_loss(torch.nn.Module):
         v_p = y_pred[y_true==1].view(-1,1)
         v_n = y_pred[y_true==0].view(1,-1)
         mat_n = v_n.repeat(len(v_p), 1)
-        loss = self.surrogate_loss(self.threshold, v_p - mat_n)
+        loss = self.surrogate_loss(self.margin, v_p - mat_n)
 
         p1 = (loss.detach() > self.s1[ids_p]).float()
         tp_loss = ((loss)/self.theta_1*p1).mean(dim=-1,keepdim=True)
@@ -1074,7 +1076,7 @@ class MultiLabelpAUCLoss(torch.nn.Module):
     """
     def __init__(self, mode='1w', num_labels=10, device=None, **kwargs):
         super(MultiLabelpAUCLoss, self).__init__()
-        assert mode in ['SOPA', 'SOPAs', 'SOTAs', '1w', '2w'], 'Keyword is not found!'  #'SOPA', 'SOPAs', 'SOTA'
+        assert mode in ['SOPA', 'SOPAs', 'SOTAs', 'STACO', '1w', '2w'], 'Keyword is not found!'  #'SOPA', 'SOPAs', 'SOTA'
         if not device:
             self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         else:
