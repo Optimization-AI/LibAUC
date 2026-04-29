@@ -9,6 +9,7 @@ import shutil
 import numpy as np
 from collections import Counter
 from tqdm import tqdm, trange
+import torch.distributed as dist
 
 def set_all_seeds(SEED):
     # for reproducibility 
@@ -17,6 +18,11 @@ def set_all_seeds(SEED):
     random.seed(SEED)  
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
+
+def is_distributed():
+    if dist.is_available() and dist.is_initialized():
+        return dist.get_world_size() > 1
+    
 
 def check_tensor_shape(tensor, shape):
     # check tensor shape 
@@ -139,3 +145,13 @@ class ImbalancedDataGenerator(object):
             check_imbalance_ratio(targets)
 
         return data, targets
+    
+
+# utils
+@torch.no_grad()
+def concat_all_gather(tensor):
+    """Performs all_gather operation on the provided tensors. ***Warning ***: torch.distributed.all_gather has no gradient."""
+    tensors_gather = [torch.ones_like(tensor) for _ in range(torch.distributed.get_world_size())]
+    torch.distributed.all_gather(tensors_gather, tensor, async_op=False)
+    output = torch.cat(tensors_gather, dim=0)
+    return output

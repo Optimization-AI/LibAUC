@@ -1,9 +1,8 @@
 import warnings
 import torch 
 import torch.nn.functional as F
-import torch.distributed as dist
 from .surrogate import get_surrogate_loss
-from ..utils.utils import check_tensor_shape
+from ..utils.utils import check_tensor_shape, is_distributed
 
 __all__ = ['AUCMLoss',
            'CompositionalAUCLoss',
@@ -22,9 +21,6 @@ __all__ = ['AUCMLoss',
            'mPAUCLoss',
            ]
 
-def is_distributed():
-    if dist.is_available() and dist.is_initialized():
-        return dist.get_world_size() > 1
     
 class AUCMLoss(torch.nn.Module):
     r"""
@@ -461,15 +457,22 @@ class pAUC_CVaR_Loss(torch.nn.Module):
         self.pos_len = pos_len
         self.u_pos = torch.tensor([0.0]*data_len).reshape(-1, 1).to(self.device).detach()               
         self.surrogate_loss = get_surrogate_loss(surr_loss)
+        self.distributed = is_distributed()
                                        
 
     def forward(self, y_pred, y_true, index, auto=True, **kwargs):       
-        if auto:
-           self.num_neg = (y_true == 0).float().sum()
-           assert self.num_neg > 0, 'There is no negative sample in the data!'
         y_pred = check_tensor_shape(y_pred, (-1, 1))
         y_true = check_tensor_shape(y_true, (-1, 1))
         index  = check_tensor_shape(index, (-1,))
+        if self.distributed:
+            y_pred = torch.cat(torch.distributed.nn.all_gather(y_pred), dim=0)
+            y_true = torch.cat(torch.distributed.nn.all_gather(y_true), dim=0)
+            index = torch.cat(torch.distributed.nn.all_gather(index), dim=0)
+
+        if auto:
+           self.num_neg = (y_true == 0).float().sum()
+           assert self.num_neg > 0, 'There is no negative sample in the data!'
+
         pos_mask = (y_true == 1).squeeze() 
         neg_mask = (y_true == 0).squeeze() 
         assert sum(pos_mask) > 0, "Input data has no positive sample! Please use 'libauc.sampler.DualSampler' for data resampling!"
@@ -479,7 +482,7 @@ class pAUC_CVaR_Loss(torch.nn.Module):
         f_ns = y_pred[neg_mask].squeeze()  # shape: (len(f_ns))  
         surr_loss = self.surrogate_loss(self.margin, f_ps - f_ns)   # shape: (len(f_ps), len(f_ns)) 
         p = surr_loss > self.u_pos[index]
-        self.u_pos[index] = self.u_pos[index]-self.eta/self.pos_len*(1 - p.sum(dim=1, keepdim=True)/(self.beta*self.num_neg))
+        self.u_pos[index] = self.u_pos[index]-self.eta*(1 - p.sum(dim=1, keepdim=True)/(self.beta*self.num_neg))
         p.detach_()
         loss = torch.mean(p * surr_loss) / self.beta
         return loss
@@ -559,11 +562,17 @@ class pAUC_DRO_Loss(torch.nn.Module):
         self.gamma = gamma 
         self.Lambda = Lambda                           
         self.surrogate_loss = get_surrogate_loss(surr_loss)
+        self.distributed = is_distributed()
     
     def forward(self, y_pred, y_true, index, **kwargs):
         y_pred = check_tensor_shape(y_pred, (-1, 1))
         y_true = check_tensor_shape(y_true, (-1, 1))
         index  = check_tensor_shape(index, (-1,))  
+        if self.distributed:
+            y_pred = torch.cat(torch.distributed.nn.all_gather(y_pred), dim=0)
+            y_true = torch.cat(torch.distributed.nn.all_gather(y_true), dim=0)
+            index = torch.cat(torch.distributed.nn.all_gather(index), dim=0)
+            
         pos_mask = (y_true == 1).squeeze() 
         neg_mask = (y_true == 0).squeeze() 
         assert sum(pos_mask) > 0, "Input data has no positive sample! Please use 'libauc.sampler.DualSampler' for data resampling!"
@@ -653,11 +662,17 @@ class tpAUC_KL_Loss(torch.nn.Module):
         self.w = 0.0 
         self.margin = margin                           
         self.surrogate_loss = get_surrogate_loss(surr_loss)
+        self.distributed = is_distributed()
                                        
     def forward(self, y_pred, y_true, index, **kwargs):
         y_pred = check_tensor_shape(y_pred, (-1, 1))
         y_true = check_tensor_shape(y_true, (-1, 1))
         index  = check_tensor_shape(index, (-1,))
+        if self.distributed:
+            y_pred = torch.cat(torch.distributed.nn.all_gather(y_pred), dim=0)
+            y_true = torch.cat(torch.distributed.nn.all_gather(y_true), dim=0)
+            index = torch.cat(torch.distributed.nn.all_gather(index), dim=0)
+
         pos_mask = (y_true == 1).squeeze() 
         neg_mask = (y_true == 0).squeeze() 
         assert sum(pos_mask) > 0, "Input data has no positive sample! Please use 'libauc.sampler.DualSampler' for data resampling!"
