@@ -158,7 +158,7 @@ class GCLoss_v1(nn.Module):
         logits_ba_bb = torch.cat([logits_ba, logits_bb], 1)
 
         if self.enable_isogclr:
-            tau = self.learnable_tau[index].cuda()
+            tau = self.learnable_tau[index].to(self.device) 
             neg_logits1 = torch.exp(logits_ab_aa/tau)*neg_mask   #(B, 2B)
             neg_logits2 = torch.exp(logits_ba_bb/tau)*neg_mask
 
@@ -173,8 +173,8 @@ class GCLoss_v1(nn.Module):
                 gamma = self.gamma_min
         else:
             gamma = self.gamma
-        u1 = (1 - gamma) * self.u[index].cuda() + gamma * torch.sum(neg_logits1, dim=1, keepdim=True)/(2*(batch_size-1))
-        u2 = (1 - gamma) * self.u[index].cuda() + gamma * torch.sum(neg_logits2, dim=1, keepdim=True)/(2*(batch_size-1))
+        u1 = (1 - gamma) * self.u[index].to(self.device)  + gamma * torch.sum(neg_logits1, dim=1, keepdim=True)/(2*(batch_size-1))
+        u2 = (1 - gamma) * self.u[index].to(self.device)  + gamma * torch.sum(neg_logits2, dim=1, keepdim=True)/(2*(batch_size-1))
 
         # this sync on all devices (since "hidden" are gathering from all devices)  #### maybe we can concat_all_gather index before?
         if self.distributed:
