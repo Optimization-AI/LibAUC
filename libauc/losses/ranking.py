@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import numpy as np
 from scipy.sparse import dok_matrix
 from .surrogate import get_surrogate_loss
+from ..utils import is_distributed, concat_all_gather
 
 
 class ListwiseCELoss(torch.nn.Module):
@@ -49,7 +50,8 @@ class ListwiseCELoss(torch.nn.Module):
         self.num_pos = num_pos
         self.gamma = gamma
         self.eps = eps
-        self.u = torch.zeros(N).to(self.device)
+        self.u = torch.zeros(N)#.to(self.device)
+        self.distributed = is_distributed()
 
     def forward(self, predictions, batch):
         """
@@ -66,9 +68,16 @@ class ListwiseCELoss(torch.nn.Module):
     
         user_item_ids = batch['user_item_id'][:, :self.num_pos].reshape(-1)
 
-        self.u[user_item_ids] = (1-self.gamma) * self.u[user_item_ids] + self.gamma * torch.mean(exp_margin, dim=1)
+        u = (1-self.gamma) * self.u[user_item_ids.cpu()].to(self.device) + self.gamma * torch.mean(exp_margin, dim=1).detach()
 
-        exp_margin_softmax = exp_margin / (self.u[user_item_ids][:, None] + self.eps)
+        if self.distributed:
+            u_global = concat_all_gather(u)
+            user_item_ids_global = concat_all_gather(user_item_ids)
+            self.u[user_item_ids_global.cpu()] = u_global.cpu()
+        else:
+            self.u[user_item_ids.cpu()] = u.cpu()
+
+        exp_margin_softmax = exp_margin / (u[:, None] + self.eps)
 
         loss = torch.sum(margin * exp_margin_softmax)
         loss /= batch_size
@@ -149,17 +158,18 @@ class NDCGLoss(torch.nn.Module):
         self.margin = margin
         self.gamma0 = gamma0
         self.topk = topk                              
-        self.lambda_q = torch.zeros(num_user+1).to(self.device)   # learnable thresholds for all querys (users)
+        self.lambda_q = torch.zeros(num_user+1)#.to(self.device)   # learnable thresholds for all querys (users)
         self.gamma1 = gamma1                        
         self.tau_1 = tau_1                            
         self.tau_2 = tau_2                       
         self.eta0 = eta0                  
         self.num_item = num_item
         self.topk_version = topk_version
-        self.s_q = torch.zeros(num_user+1).to(self.device)        # moving average estimator for \nabla_{\lambda}^2 L_q
+        self.s_q = torch.zeros(num_user+1)#.to(self.device)        # moving average estimator for \nabla_{\lambda}^2 L_q
         self.sigmoid_alpha = sigmoid_alpha
-        self.u = torch.zeros(N).to(self.device) 
+        self.u = torch.zeros(N)#.to(self.device) 
         self.surrogate_loss = get_surrogate_loss(surrogate_loss)
+        self.distributed = is_distributed()
     
     def forward(self, predictions, batch):
         
@@ -179,20 +189,36 @@ class NDCGLoss(torch.nn.Module):
 
         user_ids = batch['user_id']
         user_item_ids = batch['user_item_id'][:, :self.num_pos].reshape(-1)
+        user_ids_cpu = user_ids.cpu()
 
-        self.u[user_item_ids] = (1-self.gamma0) * self.u[user_item_ids] + self.gamma0 * g.clone().detach_().reshape(-1)
-        g_u = self.u[user_item_ids].reshape(batch_size, self.num_pos)
+        ### self.u[user_item_ids] = (1-self.gamma0) * self.u[user_item_ids] + self.gamma0 * g.clone().detach_().reshape(-1)
+        u = (1-self.gamma0) * self.u[user_item_ids.cpu()].to(device) + self.gamma0 * g.clone().detach_().reshape(-1)
+        if self.distributed:
+            u_global = concat_all_gather(u)
+            user_item_ids_global = concat_all_gather(user_item_ids)
+            self.u[user_item_ids_global.cpu()] = u_global.cpu()
+        else:
+            self.u[user_item_ids.cpu()] = u.cpu()
+
+        g_u = u.reshape(batch_size, self.num_pos)
 
         nabla_f_g = (G * self.num_item) / ((torch.log2(1 + self.num_item*g_u))**2 * (1 + self.num_item*g_u) * np.log(2)) # \nabla f(g)
 
         if self.topk > 0:
             user_ids = user_ids.long()
-            pos_preds_lambda_diffs = predictions[:, :self.num_pos].clone().detach_() - self.lambda_q[user_ids][:, None].to(device)
-            preds_lambda_diffs = predictions.clone().detach_() - self.lambda_q[user_ids][:, None].to(device)
+            pos_preds_lambda_diffs = predictions[:, :self.num_pos].clone().detach_() - self.lambda_q[user_ids_cpu][:, None].to(device)
+            preds_lambda_diffs = predictions.clone().detach_() - self.lambda_q[user_ids_cpu][:, None].to(device)
 
             # the gradient of lambda
-            grad_lambda_q = self.topk/self.num_item + self.tau_2*self.lambda_q[user_ids] - torch.mean(torch.sigmoid(preds_lambda_diffs.to(device) / self.tau_1), dim=-1)
-            self.lambda_q[user_ids] = self.lambda_q[user_ids] - self.eta0 * grad_lambda_q
+            grad_lambda_q = self.topk/self.num_item + self.tau_2*self.lambda_q[user_ids_cpu].to(device) - torch.mean(torch.sigmoid(preds_lambda_diffs / self.tau_1), dim=-1)
+            # self.lambda_q[user_ids] = self.lambda_q[user_ids] - self.eta0 * grad_lambda_q
+            lambda_q = self.lambda_q[user_ids_cpu].to(device) - self.eta0 * grad_lambda_q
+            if self.distributed:
+                lambda_q_global = concat_all_gather(lambda_q)
+                user_ids_global = concat_all_gather(user_ids)
+                self.lambda_q[user_ids_global.cpu()] = lambda_q_global.cpu()
+            else:
+                self.lambda_q[user_ids_cpu] = lambda_q.cpu()
 
             if self.topk_version == 'prac':
                 nabla_f_g *= torch.sigmoid(pos_preds_lambda_diffs * self.sigmoid_alpha)
@@ -205,8 +231,15 @@ class NDCGLoss(torch.nn.Module):
                 # part 2 of eqn. (5)
                 temp_term = torch.sigmoid(preds_lambda_diffs / self.tau_1) * (1 - torch.sigmoid(preds_lambda_diffs / self.tau_1)) / self.tau_1
                 L_lambda_hessian = self.tau_2 + torch.mean(temp_term, dim=1)                                     # \nabla_{\lambda}^2 L_q in Eq. (5) in the paper
-                self.s_q[user_ids] = self.gamma1 * L_lambda_hessian.to(device) + (1-self.gamma1) * self.s_q[user_ids] # line 10 in Algorithm 2 in the paper
-                hessian_term = torch.mean(temp_term * predictions, dim=1) / self.s_q[user_ids].to(device)        # \nabla_{\lambda,w}^2 L_q * s_q in Eq. (5) in the paper
+                # self.s_q[user_ids] = self.gamma1 * L_lambda_hessian.to(device) + (1-self.gamma1) * self.s_q[user_ids] # line 10 in Algorithm 2 in the paper
+                s_q = self.gamma1 * L_lambda_hessian + (1-self.gamma1) * self.s_q[user_ids_cpu].to(device) 
+                if self.distributed:
+                    s_q_global = concat_all_gather(s_q)
+                    user_ids_global = concat_all_gather(user_ids)
+                    self.s_q[user_ids_global.cpu()] = s_q_global.cpu()
+                else:
+                    self.s_q[user_ids_cpu] = s_q.cpu()
+                hessian_term = torch.mean(temp_term * predictions, dim=1) / self.s_q[user_ids_cpu].to(device)        # \nabla_{\lambda,w}^2 L_q * s_q in Eq. (5) in the paper
                 
                 # based on eqn. (5)
                 loss = (num_pos_items * torch.mean(nabla_f_g * g + d_psi * f_g_u * (predictions[:, :self.num_pos] - hessian_term[:, None]), dim=-1) / ideal_dcg).mean()
