@@ -2,19 +2,17 @@ import numpy as np
 import random
 import torch
 import torchvision
-from torch.utils.data.sampler import Sampler
-
 import torch.distributed as dist
 
-def is_distributed():
-    if dist.is_available() and dist.is_initialized():
-        return dist.get_world_size() > 1
+from torch.utils.data.sampler import Sampler
+from ..utils import is_distributed
 
 __all__ = [
         'ControlledDataSampler', 
         'DualSampler',
         'DistributedDualSampler',
-        'TriSampler']
+        'TriSampler',
+        'DistributedTriSampler',]
 
 class ControlledDataSampler(Sampler):
     r""" Base class for Controlled Data Sampler."""
@@ -257,7 +255,7 @@ class DistributedDualSampler(ControlledDataSampler):
 
         Args:
             dataset (torch.utils.data.Dataset): pytorch dataset object for training or evaluation.
-            batch_size (int): number of samples per mini-batch.
+            batch_size_per_gpu (int): number of samples per mini-batch for each gpu.
             sampling_rate (float): the ratio of number of positive samples to total number of samples per task in a mini-batch (default: ``0.5``).
             num_pos (int, optional): number of positive samples in a batch (default: ``None``).
             labels (list or array, optional): A list or array of labels for the dataset (default: ``None``).
@@ -342,7 +340,7 @@ class DistributedDualSampler(ControlledDataSampler):
                 self.sampled[start_index:start_index+self.num_neg] = self.neg_indices[self.neg_ptr:self.neg_ptr+self.num_neg]
                 self.neg_ptr += self.num_neg    
 
-        self.sampled = self.sampled[self.rank : self.num_batches*self.batch_size : self.num_replicas]
+        self.sampled = self.sampled[self.rank: :self.num_replicas]
 
         return iter(self.sampled)
 
@@ -523,6 +521,189 @@ class TriSampler(ControlledDataSampler):
         return len(self.sampled)
     
 
+
+class DistributedTriSampler(ControlledDataSampler):
+    r"""
+        TriSampler aims to customize the number of positives and negatives in mini-batch data for multi-label classification or ranking tasks. For more details, 
+        please refer to LibAUC paper[1]_.
+
+        Args:
+            dataset (torch.utils.data.Dataset): pytorch dataset object for training or evaluation.
+            batch_size_per_task (int): number of samples per mini-batch for each task.
+            num_sampled_tasks_per_gpu (int): number of sampled tasks from original dataset for each gpu. If None is given, then all labels (tasks) are used for training (default: ``None``).
+            sampling_rate (float): the ratio of number of positive samples to total number of samples per task in a mini-batch (default: ``0.5``).
+            num_pos (int, optional): number of positive samples in a batch (default: ``None``).
+            mode (str, optional): sampling mode for classification or ranking tasks (default: ``'classification'``).
+            labels (list or array, optional): A list or array of labels for the dataset (default: ``None``).
+            shuffle (bool): Whether to shuffle the data before sampling mini-batch data (default: ``True``).
+            random_seed (int): random seed for reproducibility (default: ``2023``).
+
+        Example:
+            >>> sampler = libauc.sampler.TriSampler(trainSet, batch_size_per_task=32, num_sampled_tasks=10, sampling_rate=0.5)
+            >>> trainloader = torch.utils.data.DataLoader(trainSet, batch_size=320, sampler=sampler, shuffle=False)
+            >>> data, targets, index = next(iter(trainloader))
+            >>> data_id, task_id = index
+
+        .. note::
+          `TriSampler` will return an index tuple of ``(sample_id, task_id)`` and it requires a slight change in your dataloader for the training. See the example below:
+
+            .. code-block:: python
+
+                class SampleDataset(torch.utils.data.Dataset):
+                    def __init__(self, inputs, targets):
+                        self.inputs = inputs
+                        self.targets = targets
+
+                    def __len__(self):
+                        return len(self.inputs)
+
+                    def __getitem__(self, index):
+                        index, task_id = index
+                        data = self.inputs[index]
+                        target = self.targets[index]
+                        return data, target, (index, task_id)
+
+        .. note::
+            
+            Practical Tips: 
+
+            - In `classification` mode, ``batch_size_per_task * num_sampled_tasks`` is the total ``batch_size``. If ``num_sampled_tasks`` is not specified, all labels will be used. 
+            - In `ranking` mode, ``batch_size_per_task`` is the number of queries, ``num_pos`` is the number of positive items per user, and ``num_sampled_tasks`` is the number of users sampled from the dataset for mini-batch. For example, ``batch_size_per_task=310``, ``num_pos=10``, ``num_sampled_tasks=256`` implies that we sample 256 users per mini-batch data where each user has 10 positive items and 300 negative items. 
+    """
+    def __init__(self, 
+                  dataset, 
+                  batch_size_per_task,  
+                  num_sampled_tasks_per_gpu=None,  
+                  sampling_rate=0.5,
+                  mode='classification',   
+                  labels=None, 
+                  shuffle=True, 
+                  num_pos=None,                 
+                  random_seed=2023):       
+        assert is_distributed()==True, "Distributed training need to be enabled"  
+        self.rank = dist.get_rank()
+        self.num_replicas = dist.get_world_size()
+        num_sampled_tasks = num_sampled_tasks_per_gpu * self.num_replicas
+
+        super().__init__(dataset, batch_size_per_task, labels, shuffle, num_pos, None, sampling_rate, random_seed)
+
+        self.mode = mode
+        assert self.mode in ['classification', 'ranking'], 'TriSampler mode should be classification or ranking'
+
+        assert self.total_tasks >=3, "TriSampler requires number of tasks >= 3 for given dataset!"
+        self.batch_size_per_task = batch_size_per_task
+
+        self.num_sampled_tasks = num_sampled_tasks if num_sampled_tasks != None else self.total_tasks # if num_sampled_tasks is not specified, it uses all tasks by default. 
+        self.batch_size = self.batch_size_per_task*self.num_sampled_tasks
+        
+        if self.mode == 'classification':
+            self.num_batches = self.labels.shape[0]//(self.batch_size_per_task*self.num_sampled_tasks)
+        else:
+            self.num_batches = self.labels.shape[1]// self.num_sampled_tasks
+
+        self.num_pos = int(self.batch_size_per_task*self.sampling_rate) if not num_pos else num_pos  
+        if self.num_pos < 1:
+           print('batch_size_per_task x sampling_rate < 1 !')
+           self.num_pos = 1
+        self.num_neg = self.batch_size_per_task - self.num_pos 
+        self.pos_len = [self.class_counts[task_id][0] for task_id in range(self.total_tasks)]
+        self.neg_len = [self.class_counts[task_id][1] for task_id in range(self.total_tasks)]
+        self.tasks_ids = np.arange(self.total_tasks)
+            
+        self.epoch = 0
+        np.random.seed(self.random_seed + self.epoch)
+        if shuffle:
+            np.random.shuffle(self.tasks_ids)
+            for task_id in range(len(self.pos_indices)):
+                np.random.shuffle(self.pos_indices[task_id])
+                np.random.shuffle(self.neg_indices[task_id])
+
+        self.pos_ptr, self.neg_ptr, self.task_ptr = np.zeros(self.total_tasks, dtype=np.int32), np.zeros(self.total_tasks, dtype=np.int32), 0
+
+        if self.mode == 'classification':
+            self.sampled = np.zeros(self.num_batches*self.batch_size, dtype=np.int64)
+            self.sampled_tasks = np.zeros(self.num_batches*self.batch_size, dtype=np.int32)
+        else:
+            self.sampled = np.zeros((self.num_batches*self.num_sampled_tasks, self.num_pos+self.num_neg), dtype=np.int32)
+            self.sampled_tasks = np.zeros(self.num_batches*self.num_sampled_tasks, dtype=np.int32)
+          
+    def __iter__(self):
+        sid = 0 
+        for batch_id in range(self.num_batches):
+            start_index = batch_id*self.batch_size 
+            if self.num_sampled_tasks < self.total_tasks:
+                task_ids = []
+                if self.task_ptr + self.num_sampled_tasks >= self.total_tasks:
+                    temp = self.tasks_ids[self.task_ptr:]
+                    self.task_ptr = (self.task_ptr + self.num_sampled_tasks) % len(self.tasks_ids)
+                    np.random.seed(self.random_seed + self.epoch)
+                    np.random.shuffle(self.tasks_ids)  
+                    task_ids = np.concatenate((temp, self.tasks_ids[:self.task_ptr]))    
+                else:
+                    task_ids = self.tasks_ids[self.task_ptr:self.task_ptr+self.num_sampled_tasks]
+                    self.task_ptr += self.num_sampled_tasks                    
+            else:
+                self.num_sampled_tasks = self.total_tasks
+                task_ids = self.tasks_ids
+                np.random.seed(self.random_seed + self.epoch)
+                np.random.shuffle(self.tasks_ids)
+
+            for idx, task_id in enumerate(task_ids):
+                if self.pos_ptr[task_id]+self.num_pos >= self.pos_len[task_id]:
+                    temp = self.pos_indices[task_id][self.pos_ptr[task_id]:]
+                    np.random.seed(self.random_seed + self.epoch)
+                    np.random.shuffle(self.pos_indices[task_id])
+                    self.pos_ptr[task_id] = (self.pos_ptr[task_id]+self.num_pos)%self.pos_len[task_id]
+                    pos_list = np.concatenate((temp, self.pos_indices[task_id][:self.pos_ptr[task_id]]))
+                else:
+                    pos_list = self.pos_indices[task_id][self.pos_ptr[task_id]:self.pos_ptr[task_id]+self.num_pos]
+                    self.pos_ptr[task_id] += self.num_pos
+
+                if self.mode == 'classification':
+                    self.sampled[start_index:start_index+self.num_pos] = pos_list
+                    self.sampled_tasks[start_index:start_index+self.num_pos] = task_id
+                    start_index += self.num_pos
+                else:
+                    self.sampled[sid, :self.num_pos] = pos_list
+                
+                if self.neg_ptr[task_id]+self.num_neg >= self.neg_len[task_id]:
+                    temp = self.neg_indices[task_id][self.neg_ptr[task_id]:]
+                    np.random.seed(self.random_seed + self.epoch)
+                    np.random.shuffle(self.neg_indices[task_id])
+                    self.neg_ptr[task_id] = (self.neg_ptr[task_id]+self.num_neg)%self.neg_len[task_id]
+                    neg_list = np.concatenate((temp, self.neg_indices[task_id][:self.neg_ptr[task_id]]))
+                else:
+                    neg_list = self.neg_indices[task_id][self.neg_ptr[task_id]:self.neg_ptr[task_id]+self.num_neg]
+                    self.neg_ptr[task_id] += self.num_neg
+
+                if self.mode == 'classification':
+                    self.sampled[start_index:start_index+self.num_neg] = neg_list
+                    self.sampled_tasks[start_index:start_index+self.num_neg] = task_id 
+                    start_index += self.num_neg
+                else:
+                    self.sampled[sid, self.num_pos:] = neg_list
+                
+                if self.mode == 'ranking':
+                    self.sampled_tasks[sid] = task_id
+                    sid += 1
+                
+        return iter(zip(self.sampled[self.rank: :self.num_replicas],
+                        self.sampled_tasks[self.rank: :self.num_replicas])) # potential issue: task_id can be zero!
+
+    def __len__ (self):
+        return len(self.sampled)
+
+    def set_epoch(self, epoch: int) -> None:
+        r"""
+        Set the epoch for this sampler.
+
+        This ensures all replicas use a different random ordering for each epoch. 
+        Otherwise, the next iteration of this sampler will yield the same ordering.
+
+        Args:
+            epoch (int): Epoch number.
+        """
+        self.epoch = epoch
 
 
     
