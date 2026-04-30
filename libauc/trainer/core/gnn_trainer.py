@@ -7,7 +7,7 @@ import torch
 from torch.utils.data import Dataset
 
 from .trainer import Trainer
-from .args import TrainingArguments
+from ..config.args import TrainingArguments
 from .callbacks import CallbackHandler, TrainerCallback
 
 logger = logging.getLogger(__name__)
@@ -27,6 +27,65 @@ _GNN_REGISTRY = {
 }
 
 class GNNTrainer(Trainer):
+    r"""
+    Training loop for graph neural networks built with libauc's GNN model zoo.
+
+    ``GNNTrainer`` extends :class:`~trainer.core.trainer.Trainer` with
+    graph-aware overrides:
+
+    * :meth:`_build_model` — looks up the requested GNN architecture in
+      :data:`_GNN_REGISTRY` and constructs it via ``libauc.models``, then
+      infers whether the model expects edge features (``supports_edge_attr``).
+    * :meth:`_get_train_dataloader` / :meth:`_get_eval_dataloader` — use
+      ``torch_geometric.loader.DataLoader`` instead of the standard PyTorch
+      one, while keeping the same :class:`~libauc.sampler.DualSampler` for
+      positive/negative balancing.
+    * :meth:`_forward` — dispatches to the correct GNN forward signature
+      (with or without ``edge_attr``).
+    * :meth:`train` — adds optional learning-rate decay at specified epochs
+      via ``optimizer.update_lr``.
+
+    Supported GNN architectures
+    ---------------------------
+    ``gcn``, ``gin``, ``gine``, ``graphsage``, ``gat``, ``mpnn``,
+    ``deepergcn``, ``pna``
+
+    Args:
+        train_args (TrainingArguments): Training configuration.
+        model_cfg (dict): GNN model configuration.  Required key: ``name``
+            (one of the architectures listed above).  Optional keys:
+            ``num_tasks`` (default ``1``), ``emb_dim`` (default ``256``),
+            ``num_layers`` (default ``5``), ``graph_pooling``, ``dropout``,
+            ``atom_features_dims``, ``bond_features_dims``, ``act``, ``norm``,
+            ``jk``, ``v2`` (GAT-only), ``aggr`` / ``t`` / ``learn_t`` / ``p``
+            / ``learn_p`` / ``block`` (DeeperGCN-only), ``pretrained`` (bool),
+            ``pretrained_path`` (str).
+        train_dataset: PyG-compatible graph dataset (train split).
+        eval_dataset (list, optional): PyG-compatible graph datasets for
+            evaluation splits (default: ``None``).
+        metric (callable, optional): ``(y_true, y_pred) -> dict[str, float]``
+        callbacks (list[TrainerCallback], optional): Training callbacks.
+        decay_epochs (list[int], optional): Epoch indices at which
+            ``optimizer.update_lr(decay_factor=decay_factor)`` is called
+            (default: no decay).
+        decay_factor (float): LR divisor at each decay epoch (default: ``10.0``).
+        train_eval_dataset: Optional dataset for an unbiased train-split
+            evaluation; falls back to ``train_dataset`` when ``None``.
+
+    Example::
+
+        >>> trainer = GNNTrainer(
+        ...     train_args=train_args,
+        ...     model_cfg={"name": "gin", "num_tasks": 1, "emb_dim": 300},
+        ...     train_dataset=train_ds,
+        ...     eval_dataset=[val_ds, test_ds],
+        ...     metric=metric_fn,
+        ...     callbacks=[CLICallback()],
+        ...     decay_epochs=[100, 150],
+        ...     decay_factor=10.0,
+        ... )
+        >>> log = trainer.train()
+    """
 
     def __init__(
         self,

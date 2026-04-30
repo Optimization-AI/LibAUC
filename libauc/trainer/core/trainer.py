@@ -8,15 +8,70 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union, M
 from torch.utils.data import Dataset
 import importlib
 
-from .args import TrainingArguments
+from ..config.args import TrainingArguments
 from .callbacks import CallbackHandler, TrainerCallback, TrainerState
 
 logger = logging.getLogger(__name__)
 
 
 class Trainer:
-    """
-    Handles model training, evaluation, and callback management.
+    r"""
+    Full training loop for image-classification models supported by libauc.
+
+    ``Trainer`` wires together a model, an AUC-aware loss function, a libauc
+    optimizer, dual/tri-sampled data loaders, and an optional evaluation
+    pipeline behind a unified :meth:`train` entry point.  Progress is
+    surfaced through a :class:`~trainer.core.callbacks.CallbackHandler` so
+    any number of :class:`~trainer.core.callbacks.TrainerCallback` subclasses
+    can observe or alter the training loop without touching ``Trainer``
+    internals.
+
+    The class is intentionally thin: heavy lifting (data loading, model
+    construction, loss/optimizer instantiation) is delegated to private
+    helpers so subclasses like :class:`~trainer.core.gnn_trainer.GNNTrainer`
+    can override only the parts they need.
+
+    Args:
+        train_args (TrainingArguments): Fully populated training configuration
+            produced by :class:`~trainer.config.args.TrainingArguments`.
+        model_cfg (dict): Architecture config forwarded to
+            :meth:`_build_model`.  Must contain at least a ``"name"`` key
+            matching one of the registered architectures (``resnet20``,
+            ``resnet18``, ``densenet121``).
+        train_dataset (Dataset): PyTorch ``Dataset`` for the training split.
+            Must expose a ``.targets`` attribute (list or array of labels).
+        eval_dataset (list[Dataset], optional): One or more evaluation
+            datasets.  ``None`` disables evaluation (default: ``None``).
+        metric (callable, optional): ``(y_true, y_pred) -> dict[str, float]``
+            function returned by :func:`~trainer.helpers.build_metric`.
+            ``None`` disables metric computation (default: ``None``).
+        callbacks (list[TrainerCallback], optional): Callbacks invoked at
+            every lifecycle hook.  When ``None`` the handler is created with
+            an empty list (default: ``None``).
+
+    Example::
+
+        >>> from trainer.config.args import TrainingArguments
+        >>> from trainer.core.trainer import Trainer
+        >>> from trainer.core.callbacks import CLICallback
+        >>> train_args = TrainingArguments(
+        ...     optimizer="PESG", optimizer_kwargs={"lr": 0.1},
+        ...     loss="AUCMLoss", loss_kwargs={"margin": 1.0},
+        ...     SEED=42, batch_size=128, eval_batch_size=128,
+        ...     sampling_rate=0.5, epochs=50, decay_epochs=[],
+        ...     num_workers=2, output_path="./output", num_tasks=1,
+        ...     resume_from_checkpoint=False, save_checkpoint_every=5,
+        ...     project_name="libauc", experiment_name="demo", verbose=1,
+        ... )
+        >>> trainer = Trainer(
+        ...     train_args=train_args,
+        ...     model_cfg={"name": "resnet18", "num_classes": 1},
+        ...     train_dataset=train_ds,
+        ...     eval_dataset=[val_ds],
+        ...     metric=metric_fn,
+        ...     callbacks=[CLICallback()],
+        ... )
+        >>> log = trainer.train()
     """
     
     def __init__(self,

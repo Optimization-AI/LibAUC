@@ -2,7 +2,7 @@ import logging
 import sys
 from typing import Any, Dict, List, Optional
 
-from .args import TrainingArguments
+from ..config.args import TrainingArguments
 
 logger = logging.getLogger(__name__)
 
@@ -19,10 +19,39 @@ class TrainerState:
 
 
 class TrainerCallback:
-    """
-    Base callback class for training events.
-    
+    r"""
+    Base class for training lifecycle callbacks.
+
+    Every method is a no-op by default, so subclasses only need to override
+    the hooks they care about.  Instances are registered with
+    :class:`~trainer.core.callbacks.CallbackHandler`, which calls each hook in
+    registration order and forwards a consistent set of keyword arguments
+    (``model``, ``optimizer``, ``loss_fn``, plus any extra kwargs the
+    :class:`~trainer.core.trainer.Trainer` supplies for that event).
+
+    Lifecycle order during a typical training run::
+
+        on_init_end
+        on_train_begin
+          for each epoch:
+            on_epoch_begin
+              for each step:
+                on_step_begin
+                on_step_end
+            on_evaluate
+            on_epoch_end
+          [on_save — called periodically inside the epoch loop]
+        on_train_end
+
     All callback methods are optional and can be overridden in subclasses.
+
+    Example::
+
+        >>> class MyCallback(TrainerCallback):
+        ...     def on_epoch_end(self, args, state, **kwargs):
+        ...         print(f"Epoch {state.epoch} done, loss={kwargs['train_loss']:.4f}")
+        ...
+        >>> trainer = Trainer(..., callbacks=[MyCallback()])
     """
     
     def __init__(self) -> None:
@@ -82,8 +111,28 @@ class TrainerCallback:
 
 
 class CallbackHandler(TrainerCallback):
-    """
-    Handler that manages multiple callbacks and calls them in order.
+    r"""
+    Multiplexer that owns a list of :class:`~TrainerCallback` instances and
+    fans out every lifecycle event to each of them in registration order.
+
+    ``CallbackHandler`` itself inherits from :class:`~TrainerCallback` so it
+    can be used polymorphically, but its primary role is orchestration rather
+    than providing hook implementations of its own.
+
+    Args:
+        callbacks (list[TrainerCallback]): Initial callback list.
+        model: The model being trained (forwarded to every callback via
+            ``kwargs["model"]``).
+        optimizer: The active optimizer (forwarded via ``kwargs["optimizer"]``).
+        loss_fn: The active loss function (forwarded via ``kwargs["loss_fn"]``).
+
+    Example::
+
+        >>> handler = CallbackHandler(
+        ...     [CLICallback()],
+        ...     model=model, optimizer=optimizer, loss_fn=loss_fn,
+        ... )
+        >>> handler.on_train_begin(args, state)
     """
     
     def __init__(self, callbacks: List[TrainerCallback], model, optimizer, loss_fn):
@@ -249,6 +298,41 @@ def _build_log_dict(
 
 
 class CLICallback(TrainerCallback):
+    r"""
+    Console and Weights & Biases logging callback.
+
+    On ``on_train_begin`` it initialises a W&B run (silently falls back to
+    console-only when W&B is not installed) and pretty-prints the full
+    :class:`~trainer.config.args.TrainingArguments` config.
+
+    On ``on_epoch_end`` it:
+
+    * appends a structured entry to ``state.train_log``;
+    * renders a progress bar (``verbose=1``) or a per-epoch line
+      (``verbose=2``) to stdout;
+    * ships the flat log dict to W&B via ``wandb.log``.
+
+    On ``on_train_end`` it prints a training summary (best validation and test
+    scores) and calls ``wandb.finish()``.
+
+    Args:
+        (none — all configuration is read from :class:`~trainer.config.args.TrainingArguments`
+        at runtime)
+
+    Note:
+        W&B logging is silently disabled when ``wandb`` is not installed or
+        when ``wandb.log`` raises an exception.
+
+    Example::
+
+        >>> trainer = Trainer(..., callbacks=[CLICallback()])
+        >>> trainer.train()
+        ============================================================
+        {'batch_size': 128, 'epochs': 50, ...}
+        ============================================================
+        Epoch [██████████████████············] 20/50 | Loss: 0.3241 | AUROC: 0.8712 | LR: 0.100000
+    """
+
     # Width of the progress bar fill (verbose=1)
     _BAR_WIDTH = 30
 
