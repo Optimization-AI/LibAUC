@@ -5,6 +5,7 @@ import torchvision.transforms as tfs
 import cv2
 from PIL import Image
 import pandas as pd
+import os
 
 class CheXpert(Dataset):
     r"""
@@ -99,7 +100,7 @@ class CheXpert(Dataset):
         self.transforms = transforms
         self.return_index = return_index
         
-        self._images_list =  [image_root_path+path for path in self.df['Path'].tolist()]
+        self._images_list =  [os.path.join(image_root_path, path) for path in self.df['Path'].tolist()]
         if class_index != -1:
             self.targets = self.df[train_cols].values[:, class_index].tolist()
         else:
