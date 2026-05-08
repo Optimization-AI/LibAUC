@@ -1,10 +1,7 @@
 import torch 
 import math 
 import torch.distributed as dist
-
-def is_distributed():
-    if dist.is_available() and dist.is_initialized():
-        return dist.get_world_size() > 1
+from ..utils import is_distributed
 
 class PESG(torch.optim.Optimizer):
     r"""
