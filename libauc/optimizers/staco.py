@@ -85,6 +85,9 @@ class STACO(torch.optim.Optimizer):
         if is_distributed():
             self.distributed = True
             self.world_size = torch.distributed.get_world_size()
+        else:
+            self.distributed = False
+            self.world_size = 1
 
         self.epoch_decay = epoch_decay
         self.mode = mode.lower()

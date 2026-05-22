@@ -162,7 +162,7 @@ class ControlledDataSampler(Sampler):
     
 class DualSampler(ControlledDataSampler):
     r"""
-        Dual Sampler aims to customize the number of positives and negatives in mini-batch data for binary classification tasks. 
+        DualSampler aims to customize the number of positives and negatives in mini-batch data for binary classification tasks. 
         For more details, please refer to LibAUC paper[1]_.
 
         Args:
@@ -250,8 +250,7 @@ class DualSampler(ControlledDataSampler):
 
 class DistributedDualSampler(ControlledDataSampler):
     r"""
-        Dual Sampler aims to customize the number of positives and negatives in mini-batch data for binary classification tasks. 
-        For more details, please refer to LibAUC paper[1]_.
+        Similar to DualSampler that customizes the number of positives and negatives in mini-batch data, DistributedDualSampler also ensures each process gets a different subset of the data without overlap for distributed training.
 
         Args:
             dataset (torch.utils.data.Dataset): pytorch dataset object for training or evaluation.
@@ -264,7 +263,7 @@ class DistributedDualSampler(ControlledDataSampler):
             random_seed (int): random seed for reproducibility (default: ``2023``).
 
         Example:
-            >>> sampler = libauc.sampler.DualSampler(trainSet, batch_size=32, sampling_rate=0.5)
+            >>> sampler = libauc.sampler.DistributedDualSampler(trainSet, batch_size_per_gpu=32, sampling_rate=0.5)
             >>> trainloader = torch.utils.data.DataLoader(trainSet, batch_size=32, sampler=sampler, shuffle=False)
             >>> data, targets, index = next(iter(trainloader))
 
@@ -524,8 +523,7 @@ class TriSampler(ControlledDataSampler):
 
 class DistributedTriSampler(ControlledDataSampler):
     r"""
-        TriSampler aims to customize the number of positives and negatives in mini-batch data for multi-label classification or ranking tasks. For more details, 
-        please refer to LibAUC paper[1]_.
+        Similar to TriSampler that customizes the number of positives and negatives in mini-batch data, DistributedTriSampler also ensures each process gets a different subset of the data without overlap for distributed training.
 
         Args:
             dataset (torch.utils.data.Dataset): pytorch dataset object for training or evaluation.
@@ -539,7 +537,7 @@ class DistributedTriSampler(ControlledDataSampler):
             random_seed (int): random seed for reproducibility (default: ``2023``).
 
         Example:
-            >>> sampler = libauc.sampler.TriSampler(trainSet, batch_size_per_task=32, num_sampled_tasks=10, sampling_rate=0.5)
+            >>> sampler = libauc.sampler.DistributedTriSampler(trainSet, batch_size_per_task=32, num_sampled_tasks_per_gpu=10, sampling_rate=0.5)
             >>> trainloader = torch.utils.data.DataLoader(trainSet, batch_size=320, sampler=sampler, shuffle=False)
             >>> data, targets, index = next(iter(trainloader))
             >>> data_id, task_id = index
@@ -567,8 +565,8 @@ class DistributedTriSampler(ControlledDataSampler):
             
             Practical Tips: 
 
-            - In `classification` mode, ``batch_size_per_task * num_sampled_tasks`` is the total ``batch_size``. If ``num_sampled_tasks`` is not specified, all labels will be used. 
-            - In `ranking` mode, ``batch_size_per_task`` is the number of queries, ``num_pos`` is the number of positive items per user, and ``num_sampled_tasks`` is the number of users sampled from the dataset for mini-batch. For example, ``batch_size_per_task=310``, ``num_pos=10``, ``num_sampled_tasks=256`` implies that we sample 256 users per mini-batch data where each user has 10 positive items and 300 negative items. 
+            - In `classification` mode, ``batch_size_per_task * num_sampled_tasks_per_gpu`` is the total ``batch_size_per_gpu``. If ``num_sampled_tasks_per_gpu`` is not specified, all labels will be used. 
+            - In `ranking` mode, ``batch_size_per_task`` is the number of queries, ``num_pos`` is the number of positive items per user, and ``num_sampled_tasks_per_gpu`` is the number of users sampled from the dataset for mini-batch per gpu. For example, ``batch_size_per_task=310``, ``num_pos=10``, ``num_sampled_tasks=256`` implies that we sample 256 users per mini-batch data for each gpu where each user has 10 positive items and 300 negative items. 
     """
     def __init__(self, 
                   dataset, 

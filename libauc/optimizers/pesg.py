@@ -126,6 +126,9 @@ class PESG(torch.optim.Optimizer):
         if is_distributed():
             self.distributed = True
             self.world_size = torch.distributed.get_world_size()
+        else:
+            self.distributed = False
+            self.world_size = 1
     
         assert self.mode in ['adam', 'sgd'], "Keyword is not found in [`adam`, `sgd`]!"
        
