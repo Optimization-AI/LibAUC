@@ -210,9 +210,9 @@ class CompositionalAUCLoss(torch.nn.Module):
         self.p = imratio
         self.version = version
         assert version in ['v1', 'v2'], "Input value is not valid! Possible values are ['v1', 'v2']."
-        self.a = torch.nn.Parameter(torch.zeros(1, dtype=torch.float32)).to(self.device)
-        self.b = torch.nn.Parameter(torch.zeros(1, dtype=torch.float32)).to(self.device)
-        self.alpha = torch.nn.Parameter(torch.zeros(1, dtype=torch.float32)).to(self.device)
+        self.a = torch.nn.Parameter(torch.zeros(1, dtype=torch.float32, device=self.device))
+        self.b = torch.nn.Parameter(torch.zeros(1, dtype=torch.float32, device=self.device))
+        self.alpha = torch.nn.Parameter(torch.zeros(1, dtype=torch.float32, device=self.device))
         self.L_AVG = F.binary_cross_entropy 
         self.backend = backend  
         self.k = k

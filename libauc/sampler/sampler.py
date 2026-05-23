@@ -481,7 +481,7 @@ class TriSampler(ControlledDataSampler):
                     temp = self.pos_indices[task_id][self.pos_ptr[task_id]:]
                     np.random.shuffle(self.pos_indices[task_id])
                     self.pos_ptr[task_id] = (self.pos_ptr[task_id]+self.num_pos)%self.pos_len[task_id]
-                    loops = (self.num_pos - self.pos_len[task_id] + self.pos_ptr[task_id]) // self.pos_len[task_id]
+                    loops = max(0, (self.num_pos - len(temp) - self.pos_ptr[task_id]) // self.pos_len[task_id])
                     pos_list = np.concatenate((temp, np.tile(self.pos_indices[task_id], loops), self.pos_indices[task_id][:self.pos_ptr[task_id]]))
                 else:
                     pos_list = self.pos_indices[task_id][self.pos_ptr[task_id]:self.pos_ptr[task_id]+self.num_pos]
