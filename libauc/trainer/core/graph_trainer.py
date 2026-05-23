@@ -6,7 +6,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
-from .trainer import Trainer
+from .image_trainer import Trainer
 from ..config.args import TrainingArguments
 from .callbacks import CallbackHandler, TrainerCallback
 
@@ -26,11 +26,11 @@ _GNN_REGISTRY = {
     "pna":        "PNA",
 }
 
-class GNNTrainer(Trainer):
+class GraphTrainer(Trainer):
     r"""
     Training loop for graph neural networks built with libauc's GNN model zoo.
 
-    ``GNNTrainer`` extends :class:`~trainer.core.trainer.Trainer` with
+    ``GraphTrainer`` extends :class:`~trainer.core.image_trainer.Trainer` with
     graph-aware overrides:
 
     * :meth:`_build_model` — looks up the requested GNN architecture in
@@ -54,8 +54,8 @@ class GNNTrainer(Trainer):
         train_args (TrainingArguments): Training configuration.
         model_cfg (dict): GNN model configuration.  Required key: ``name``
             (one of the architectures listed above).  Optional keys:
-            ``num_tasks`` (default ``1``), ``emb_dim`` (default ``256``),
-            ``num_layers`` (default ``5``), ``graph_pooling``, ``dropout``,
+            ``emb_dim`` (default ``256``), ``num_layers`` (default ``5``),
+            ``graph_pooling``, ``dropout``,
             ``atom_features_dims``, ``bond_features_dims``, ``act``, ``norm``,
             ``jk``, ``v2`` (GAT-only), ``aggr`` / ``t`` / ``learn_t`` / ``p``
             / ``learn_p`` / ``block`` (DeeperGCN-only), ``pretrained`` (bool),
@@ -74,9 +74,9 @@ class GNNTrainer(Trainer):
 
     Example::
 
-        >>> trainer = GNNTrainer(
+        >>> trainer = GraphTrainer(
         ...     train_args=train_args,
-        ...     model_cfg={"name": "gin", "num_tasks": 1, "emb_dim": 300},
+        ...     model_cfg={"name": "gin", "emb_dim": 300},
         ...     train_dataset=train_ds,
         ...     eval_dataset=[val_ds, test_ds],
         ...     metric=metric_fn,
@@ -139,7 +139,10 @@ class GNNTrainer(Trainer):
         Required keys
         -------------
         name        : one of gcn | gin | gine | graphsage | gat | mpnn | deepergcn | pna
-        num_tasks   : number of output tasks  (default 1)
+
+        Optional keys (inferred automatically)
+        ---------------------------------------
+        num_tasks   : inferred from ``self.args.num_tasks``; ignored if present in model_cfg
         emb_dim     : node/edge embedding size (default 256)
         num_layers  : number of message-passing layers (default 5)
 
@@ -157,10 +160,29 @@ class GNNTrainer(Trainer):
             class-level flag, which every model in libauc.models declares.
         """
         name = model_cfg.get("name", "").lower()
+
+        # ── HuggingFace Hub path ────────────────────────────────────────────────
+        if "/" in name:
+            from torch_geometric.nn import to_captum  # noqa: ensure PyG available
+            from transformers import AutoModel
+
+            model = AutoModel.from_pretrained(name, trust_remote_code=True).cuda()
+
+            # Infer edge-feature support from the loaded model
+            if hasattr(model, "supports_edge_attr"):
+                self._with_edge_features = bool(model.supports_edge_attr)
+            else:
+                self._with_edge_features = False
+
+            logger.info(f"Loaded HF model '{name}' | with_edge_features={self._with_edge_features}")
+            self.model = model
+            return
+        
         if name not in _GNN_REGISTRY:
             raise ValueError(
                 f"Unknown GNN model '{name}'. "
                 f"Supported: {list(_GNN_REGISTRY.keys())}"
+                f"or a HuggingFace model ID (e.g. 'user/my-gcn')"
             )
 
         # Import the class from libauc.models
@@ -173,36 +195,17 @@ class GNNTrainer(Trainer):
                 "Make sure your libauc version includes GNN support."
             )
 
-        # ---- build constructor kwargs ----------------------------------------
-        constructor_kwargs = dict(
-            num_tasks  = model_cfg.get("num_tasks",  1),
-            emb_dim    = model_cfg.get("emb_dim",    256),
-            num_layers = model_cfg.get("num_layers", 5),
-        )
+        _META_KEYS = {"name", "num_tasks", "pretrained", "pretrained_remote", "pretrained_path"}
 
-        # Optional shared kwargs
-        for key in ("graph_pooling", "dropout", "atom_features_dims",
-                    "bond_features_dims", "act", "norm", "jk"):
-            if key in model_cfg:
-                constructor_kwargs[key] = model_cfg[key]
-
-        # DeeperGCN-specific kwargs
-        if name == "deepergcn":
-            for key in ("aggr", "t", "learn_t", "p", "learn_p", "block"):
-                if key in model_cfg:
-                    constructor_kwargs[key] = model_cfg[key]
-
-        # GAT-specific kwargs
-        if name == "gat" and "v2" in model_cfg:
-            constructor_kwargs["v2"] = model_cfg["v2"]
+        constructor_kwargs = {
+            k: v for k, v in model_cfg.items() if k not in _META_KEYS
+        }
+        constructor_kwargs["num_tasks"] = self.args.num_tasks
+        constructor_kwargs.setdefault("emb_dim",    256)
+        constructor_kwargs.setdefault("num_layers", 5)
 
         model = model_cls(**constructor_kwargs).cuda()
 
-        # ---- infer whether this architecture uses edge features ----------------
-        # Every BasicGNN subclass in libauc.models declares `supports_edge_attr`
-        # as a Final[bool] class attribute.  DeeperGCN doesn't inherit BasicGNN
-        # but always takes edge_attr in forward(), so we fall back to a name-based
-        # lookup.
         if hasattr(model_cls, "supports_edge_attr"):
             with_edge_features = bool(model_cls.supports_edge_attr)
         else:

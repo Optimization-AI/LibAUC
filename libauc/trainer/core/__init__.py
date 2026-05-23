@@ -1,3 +1,3 @@
 from .callbacks import *
-from .gnn_trainer import *
-from .trainer import *
+from .graph_trainer import *
+from .image_trainer import *

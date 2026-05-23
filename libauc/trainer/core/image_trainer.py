@@ -1,10 +1,9 @@
 import logging
 import torch
-import libauc
 import numpy as np
 from libauc.sampler import DualSampler, TriSampler
 import os
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union, Mapping
+from typing import Callable, List, Optional, Mapping
 from torch.utils.data import Dataset
 import importlib
 
@@ -13,12 +12,96 @@ from .callbacks import CallbackHandler, TrainerCallback, TrainerState
 
 logger = logging.getLogger(__name__)
 
+# Keys that identify classification-head parameters in both built-in libauc
+# models (fc / linear) and HuggingFace models (classifier / head).
+_HEAD_PARTS: frozenset = frozenset({"fc", "linear", "classifier", "head"})
+
+class _ChannelExpand:
+    """DataLoader collate that expands single-channel images to 3 channels.
+
+    Used when the dataset contains grayscale images (1 channel) but the
+    model expects RGB input (3 channels).  The single channel is repeated
+    three times: ``(N, 1, H, W)`` → ``(N, 3, H, W)``.
+
+    Defined at module level for DataLoader worker pickling.
+    """
+
+    def __call__(self, batch):
+        from torch.utils.data import default_collate
+        images, targets, indices = default_collate(batch)
+        images = images.expand(-1, 3, -1, -1).contiguous()
+        return images, targets, indices
+
+
+class _HFCollate:
+    """DataLoader collate function that applies an ``AutoImageProcessor`` to a batch.
+
+    Defined at module level so it is picklable by DataLoader worker processes.
+
+    Image preprocessing (resize + model-specific normalisation) happens here,
+    on CPU inside a DataLoader worker, **before** the batch is transferred to
+    the GPU.  This avoids the costly GPU→CPU→GPU round-trip that occurs when
+    preprocessing runs inside :meth:`~_HFModelWrapper.forward`.
+
+    Single-channel (grayscale) inputs are automatically expanded to 3 channels
+    before the processor is called, so the dataset requires no special handling.
+
+    .. note::
+        Assumes images are ``float32`` tensors in the ``[0, 1]`` range (i.e.
+        the output of ``torchvision.transforms.ToTensor()``).
+        ``do_rescale=False`` is set to avoid multiplying by 1/255 again.
+
+    Args:
+        processor: An ``AutoImageProcessor`` instance.
+    """
+
+    def __init__(self, processor) -> None:
+        self.processor = processor
+
+    def __call__(self, batch):
+        from torch.utils.data import default_collate
+        images, targets, indices = default_collate(batch)
+        # Expand grayscale (1 ch) to RGB (3 ch) before the processor.
+        if images.shape[1] == 1:
+            images = images.expand(-1, 3, -1, -1).contiguous()
+        out = self.processor(images=images, return_tensors="pt", do_rescale=False)
+        return out["pixel_values"], targets, indices
+
+
+class _HFModelWrapper(torch.nn.Module):
+    """Thin wrapper so HuggingFace image-classification models return raw logits.
+
+    HuggingFace models return a ``SequenceClassifierOutput`` (or similar
+    ``ModelOutput``) whose ``.logits`` field holds the raw class scores.
+    This wrapper unpacks that so the rest of the Trainer sees a plain
+    :class:`torch.Tensor`, identical in shape to a built-in libauc backbone.
+
+    Image preprocessing (resize + normalise) is handled upstream by
+    :class:`_HFCollate` in the DataLoader worker.  By the time
+    :meth:`forward` is called the tensor is already in the model's expected
+    format, so no CPU/GPU transfers are needed here.
+
+    Args:
+        hf_model (torch.nn.Module): Any ``transformers`` model that accepts
+            a ``pixel_values`` keyword argument and returns an object with a
+            ``.logits`` attribute (e.g. loaded via
+            ``AutoModelForImageClassification``).
+    """
+
+    def __init__(self, hf_model: torch.nn.Module) -> None:
+        super().__init__()
+        self.hf_model = hf_model
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Return raw logits as a plain tensor."""
+        return self.hf_model(pixel_values=x).logits
+
 
 class Trainer:
     r"""
     Full training loop for image-classification models supported by libauc.
 
-    ``Trainer`` wires together a model, an AUC-aware loss function, a libauc
+    ``Trainer`` wires together a model, an AUC-specific loss function, a libauc
     optimizer, dual/tri-sampled data loaders, and an optional evaluation
     pipeline behind a unified :meth:`train` entry point.  Progress is
     surfaced through a :class:`~trainer.core.callbacks.CallbackHandler` so
@@ -28,16 +111,21 @@ class Trainer:
 
     The class is intentionally thin: heavy lifting (data loading, model
     construction, loss/optimizer instantiation) is delegated to private
-    helpers so subclasses like :class:`~trainer.core.gnn_trainer.GNNTrainer`
+    helpers so subclasses like :class:`~trainer.core.graph_trainer.GraphTrainer`
     can override only the parts they need.
 
     Args:
         train_args (TrainingArguments): Fully populated training configuration
             produced by :class:`~trainer.config.args.TrainingArguments`.
         model_cfg (dict): Architecture config forwarded to
-            :meth:`_build_model`.  Must contain at least a ``"name"`` key
-            matching one of the registered architectures (``resnet20``,
-            ``resnet18``, ``densenet121``).
+            :meth:`_build_model`.  Must contain at least a ``"name"`` key.
+            Built-in architectures: ``resnet20``, ``resnet18``,
+            ``densenet121``.  Any HuggingFace model repo ID containing
+            a ``/`` is also accepted (e.g.
+            ``"google/vit-base-patch16-224"``,
+            ``"openai/clip-vit-base-patch32"``).  For HF models the
+            ``AutoImageProcessor`` is applied inside the trainer — the
+            dataset needs no HF-specific transforms.
         train_dataset (Dataset): PyTorch ``Dataset`` for the training split.
             Must expose a ``.targets`` attribute (list or array of labels).
         eval_dataset (list[Dataset], optional): One or more evaluation
@@ -52,7 +140,7 @@ class Trainer:
     Example::
 
         >>> from trainer.config.args import TrainingArguments
-        >>> from trainer.core.trainer import Trainer
+        >>> from trainer.core.image_trainer import Trainer
         >>> from trainer.core.callbacks import CLICallback
         >>> train_args = TrainingArguments(
         ...     optimizer="PESG", optimizer_kwargs={"lr": 0.1},
@@ -65,11 +153,25 @@ class Trainer:
         ... )
         >>> trainer = Trainer(
         ...     train_args=train_args,
-        ...     model_cfg={"name": "resnet18", "num_classes": 1},
+        ...     model_cfg={"name": "resnet18"},
         ...     train_dataset=train_ds,
         ...     eval_dataset=[val_ds],
         ...     metric=metric_fn,
         ...     callbacks=[CLICallback()],
+        ... )
+        >>> log = trainer.train()
+
+    HuggingFace model — no dataset changes needed, the trainer preprocesses
+    internally::
+
+        >>> trainer = Trainer(
+        ...     train_args=train_args,
+        ...     model_cfg={
+        ...         "name": "google/vit-base-patch16-224",
+        ...     },
+        ...     train_dataset=train_ds,
+        ...     eval_dataset=[val_ds],
+        ...     metric=metric_fn,
         ... )
         >>> log = trainer.train()
     """
@@ -83,19 +185,19 @@ class Trainer:
                  callbacks: Optional[List[TrainerCallback]] = None):
         """
         Initialize the trainer.
-        
+
         Args:
-            model: The neural network model to train
-            train_args: Training configuration arguments
-            train_dataset: Training dataset
-            eval_dataset: Optional evaluation datasets
-            metric: Evaluation metric function
-            callbacks: Optional list of training callbacks
+            train_args: Training configuration arguments.
+            model_cfg: Model architecture config (dict with at least a ``"name"`` key).
+            train_dataset: Training dataset.
+            eval_dataset: Optional list of evaluation datasets.
+            metric: Evaluation metric function ``(y_true, y_pred) -> dict``.
+            callbacks: Optional list of training callbacks.
         """
         
         self.args = train_args
-        self._build_model(model_cfg)
-        self.train_dataset = train_dataset
+        self.train_dataset = train_dataset   # set before _build_model so it
+        self._build_model(model_cfg)         # can infer in_channels from data
         self.eval_dataset = eval_dataset
         self.state = TrainerState()
         self.state.total_epoch = self.args.epochs
@@ -133,88 +235,173 @@ class Trainer:
     
     def _build_model(self, model_cfg: dict):
         """
-        Build a model from the 'model' config block.
+        Build a model from the ``model`` config block.
 
-        Expected keys:
-            name        - architecture name (string)
-            pretrained  - bool (default False)
-            num_classes - int  (default 1 for binary classification)
+        Expected keys
+        -------------
+        name              Architecture name.  Use one of the built-in shortcuts
+                          (``resnet20``, ``resnet18``, ``densenet121``) **or**
+                          any HuggingFace model repo ID that contains a ``/``
+                          (e.g. ``"google/vit-base-patch16-224"``,
+                          ``"openai/clip-vit-base-patch32"``).
+                          HF models are loaded via
+                          ``AutoModelForImageClassification.from_pretrained``
+                          and wrapped in :class:`_HFModelWrapper`.  The
+                          ``AutoImageProcessor`` is applied in the DataLoader
+                          collate function so the external dataset requires
+                          **no** HF-specific transforms — a plain
+                          ``ToTensor()`` is sufficient.
+        pretrained        bool — load a local checkpoint from
+                          ``pretrained_path`` (default ``False``).
+        pretrained_remote bool — use the architecture's own pretrained
+                          ImageNet weights where supported (default ``False``).
+                          Ignored for HF models.
+        pretrained_path   str — path to a local ``.pt`` checkpoint.  Required
+                          when ``pretrained=True``.  Head parameters identified
+                          by :data:`_HEAD_PARTS` are excluded from loading and
+                          re-initialised so the model can be fine-tuned on a
+                          different number of classes.
 
-        TODO: Register additional architectures as needed.
+        Attributes set on ``self``
+        --------------------------
+        image_processor   ``AutoImageProcessor`` instance for the HF model
+                          (``None`` for built-in models).  The trainer uses
+                          it via :class:`_HFCollate` in the DataLoader —
+                          do **not** apply it again in your dataset transforms.
         """
 
-        name        = model_cfg.get("name", "").lower()
-        pretrained  = model_cfg.get("pretrained", False)
+        name              = model_cfg.get("name", "")
+        name_lower        = name.lower()
+        pretrained        = model_cfg.get("pretrained", False)
         pretrained_remote = model_cfg.get("pretrained_remote", False)
-        num_classes = model_cfg.get("num_classes", 1)
-        in_channels = model_cfg.get("in_channels", 3)
+        is_hf_model       = "/" in name
 
-        if name == "resnet20":
+        num_classes = 1 if self.args.num_tasks <= 2 else self.args.num_tasks
+
+        in_channels = 3  # sensible default (RGB)
+        try:
+            first_sample = self.train_dataset[0]
+            img = first_sample[0] if isinstance(first_sample, (tuple, list)) else first_sample
+            if hasattr(img, "shape") and img.ndim >= 3:
+                in_channels = img.shape[0]
+        except Exception:
+            pass
+
+        if in_channels not in (1, 3):
+            raise ValueError(
+                f"Dataset images have {in_channels} channels. "
+                f"Only 1 (grayscale) and 3 (RGB) are supported."
+            )
+
+        # If grayscale, flag expansion; all model constructors receive in_channels=3.
+        self._expand_to_rgb = (in_channels == 1)
+        if self._expand_to_rgb:
+            logger.info(
+                "Grayscale input (1 channel) detected — images will be "
+                "expanded to 3 channels (L→RGB repeat) in the DataLoader "
+                "collate function."
+            )
+            in_channels = 3
+
+        logger.info(f"Auto-detected: num_classes={num_classes}, in_channels={in_channels}")
+
+        self.image_processor = None   # public reference (for inspection)
+        self._hf_processor   = None   # used by _make_collate_fn()
+
+        if name_lower == "resnet20":
             from libauc.models import resnet20
             model = resnet20(last_activation=None, num_classes=num_classes)
-        elif name == "resnet18":
+        elif name_lower == "resnet18":
             from libauc.models import resnet18
-            model = resnet18(pretrained=pretrained_remote, last_activation=None, in_channels=in_channels, num_classes=num_classes)
-        elif name == "densenet121":
+            model = resnet18(pretrained=pretrained_remote, last_activation=None, num_classes=num_classes)
+        elif name_lower == "densenet121":
             from libauc.models import densenet121
             model = densenet121(pretrained=pretrained_remote, last_activation=None, activations='relu', num_classes=num_classes)
+        elif is_hf_model:
+            from transformers import AutoImageProcessor, AutoModelForImageClassification
+
+            try:
+                _proc = AutoImageProcessor.from_pretrained(name)
+                self.image_processor = _proc   # public reference
+                self._hf_processor   = _proc   # picked up by DataLoaders
+                _sz = getattr(_proc, "size", "unknown")
+                logger.info(
+                    f"HF image processor for '{name}': native size = {_sz}. "
+                    "Preprocessing applied in DataLoader collate_fn."
+                )
+            except Exception as exc:
+                logger.warning(
+                    f"Could not load AutoImageProcessor for '{name}': {exc}. "
+                    "Raw tensors will be passed directly to the model — ensure "
+                    "your dataset already matches the model's expected resolution "
+                    "and normalisation."
+                )
+
+            # ── Model ────────────────────────────────────────────────────────
+            hf_model = AutoModelForImageClassification.from_pretrained(
+                name,
+                num_labels=num_classes,
+                ignore_mismatched_sizes=True,
+            )
+            model = _HFModelWrapper(hf_model)
+            logger.info(f"Loaded HuggingFace model '{name}' | num_labels={num_classes}")
         else:
-            raise ValueError(f"Unknown model '{name}'. Please add it to build_model().")
+            raise ValueError(
+                f"Unknown model '{name}'. Use a built-in name "
+                f"(resnet20, resnet18, densenet121) or a HuggingFace repo ID "
+                f"containing '/' (e.g. 'google/vit-base-patch16-224')."
+            )
 
         model = model.cuda()
-        if pretrained:
-            state_dict = torch.load(model_cfg.get("pretrained_path"), weights_only = False)
-            if 'model_state_dict' in state_dict:
-                state_dict = state_dict['model_state_dict']
 
-            filtered = {k:v for k,v in state_dict.items() if 'fc' not in k and 'linear' not in k}
-            msg = model.load_state_dict(filtered, False)
+        if pretrained:
+            pretrained_path = model_cfg.get("pretrained_path")
+            if not pretrained_path:
+                raise ValueError(
+                    "pretrained=True but 'pretrained_path' is not set in model_cfg."
+                )
+            state_dict = torch.load(pretrained_path, weights_only=False)
+            if "model_state_dict" in state_dict:
+                state_dict = state_dict["model_state_dict"]
+
+            filtered = {
+                k: v for k, v in state_dict.items()
+                if not any(part in k.split(".") for part in _HEAD_PARTS)
+            }
+            msg = model.load_state_dict(filtered, strict=False)
             logger.info(msg)
-            if hasattr(model, 'fc'):
-                model.fc.reset_parameters()
-            if hasattr(model, 'linear'):
-                model.linear.reset_parameters()
-        
+
+            # Re-initialise the head so it starts from scratch.
+            if is_hf_model:
+                inner = model.hf_model
+                for attr in ("classifier", "head"):
+                    head = getattr(inner, attr, None)
+                    if head is not None and hasattr(head, "reset_parameters"):
+                        head.reset_parameters()
+            else:
+                for attr in ("fc", "linear"):
+                    head = getattr(model, attr, None)
+                    if head is not None and hasattr(head, "reset_parameters"):
+                        head.reset_parameters()
+
         self.model = model
 
-    def _get_optimizer(self, name):
-        """
-        Get an optimizer class by name.
-        
-        Args:
-            name: Name of the optimizer
-            
-        Returns:
-            Optimizer class
-        """
+    @staticmethod
+    def _get_optimizer(name: str):
+        """Return the optimizer class *name* from ``libauc.optimizers``."""
         opt = importlib.import_module("libauc.optimizers")
-        opt_cls = getattr(opt, name, None)
-        return opt_cls
+        return getattr(opt, name, None)
 
-
-    def _get_loss(self, name):
-        """
-        Get a loss function class by name.
-        
-        Args:
-            name: Name of the loss function
-            
-        Returns:
-            Loss function class
-        """
-        # Try libauc first
+    @staticmethod
+    def _get_loss(name: str):
+        """Return the loss class *name*, checking ``libauc.losses`` then ``torch.nn``."""
         libauc_losses = importlib.import_module("libauc.losses")
         loss_cls = getattr(libauc_losses, name, None)
-        
-        # Fall back to torch.nn if not found in libauc
         if loss_cls is None:
             import torch.nn as nn
             loss_cls = getattr(nn, name, None)
-        
-        # Raise error if not found in either
         if loss_cls is None:
             raise ValueError(f"Loss function '{name}' not found in libauc.losses or torch.nn")
-        
         return loss_cls
 
     def _construct_optimizer_and_loss(self, model, train_args: TrainingArguments):
@@ -243,6 +430,24 @@ class Trainer:
     
         return loss_fn, optimizer
 
+    def _make_collate_fn(self):
+        """Return the appropriate collate function for this trainer instance.
+
+        Priority:
+        - HF model → :class:`_HFCollate` (handles both channel expansion and
+          processor-based resize/normalise).
+        - Built-in model + grayscale input → :class:`_ChannelExpand` (repeats
+          the single channel three times to produce RGB tensors).
+        - Built-in model + RGB input → ``None`` (PyTorch default collation).
+        """
+        proc   = getattr(self, "_hf_processor",  None)
+        expand = getattr(self, "_expand_to_rgb", False)
+        if proc is not None:
+            return _HFCollate(proc)   # _HFCollate handles expansion internally
+        if expand:
+            return _ChannelExpand()
+        return None
+
     def _get_train_dataloader(self, train_args: TrainingArguments):
         """Create training data loader with dual sampling."""
         if train_args.num_tasks >= 3:
@@ -250,20 +455,22 @@ class Trainer:
         else:
             sampler = DualSampler(self.train_dataset, train_args.batch_size, sampling_rate=train_args.sampling_rate)
         trainloader = torch.utils.data.DataLoader(
-            self.train_dataset, 
-            batch_size=train_args.batch_size, 
-            sampler=sampler, 
-            num_workers=train_args.num_workers
+            self.train_dataset,
+            batch_size=train_args.batch_size,
+            sampler=sampler,
+            num_workers=train_args.num_workers,
+            collate_fn=self._make_collate_fn(),
         )
         return sampler, trainloader
 
     def _get_eval_dataloader(self, dataset, train_args: TrainingArguments):
         """Create evaluation data loader."""
         evalloader = torch.utils.data.DataLoader(
-            dataset, 
-            batch_size=train_args.eval_batch_size, 
-            shuffle=False, 
-            num_workers=train_args.num_workers
+            dataset,
+            batch_size=train_args.eval_batch_size,
+            shuffle=False,
+            num_workers=train_args.num_workers,
+            collate_fn=self._make_collate_fn(),
         )
         return evalloader
     
@@ -282,57 +489,57 @@ class Trainer:
         if self.args.resume_from_checkpoint:
             latest_checkpoint = self.get_latest_checkpoint(os.path.join(self.args.output_path, self.args.experiment_name))
             if latest_checkpoint:
-                checkpoint = self.load_checkpoint(latest_checkpoint)
+                self.load_checkpoint(latest_checkpoint)
                 logger.info(f"Resuming training from epoch {self.state.epoch}")
             else:
                 logger.info("No checkpoint found in output folder, starting from scratch")
         
         for epoch in range(self.state.epoch, self.args.epochs):
             self.callback_handler.on_epoch_begin(self.args, self.state)
-            train_loss = []
+            step_losses = []
             model.train()
-            
+
             # Training loop
             for data, targets, index in self.trainloader:
                 self.callback_handler.on_step_begin(self.args, self.state)
 
                 data, targets = data.cuda(), targets.cuda()
                 y_pred = model(data)
-                
+
                 # Compute loss
                 if self.args.loss == "CrossEntropyLoss":
                     loss = self.loss_fn(y_pred, targets)
-                if self.args.loss == "BCELoss":
+                elif self.args.loss == "BCELoss":
                     y_pred = torch.sigmoid(y_pred)
                     loss = self.loss_fn(y_pred, targets)
                 else:
                     y_pred = torch.sigmoid(y_pred)
-                    if isinstance(index, list):  # Multilable
+                    if isinstance(index, list):  # Multi-label
                         index, task_id = index
-                        loss = self.loss_fn(y_pred, targets, index=index.cuda(), task_id = task_id)
+                        loss = self.loss_fn(y_pred, targets, index=index.cuda(), task_id=task_id)
                     else:
                         loss = self.loss_fn(y_pred, targets, index=index.cuda())
-                
+
                 # Optimizer step
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
-                train_loss.append(loss.item())
+                step_losses.append(loss.item())
 
                 self.callback_handler.on_step_end(self.args, self.state)
 
             # Evaluation
             model.eval()
-            train_loss = np.mean(train_loss)
+            avg_train_loss = float(np.mean(step_losses))
             metrics, test_true, test_pred = self.evaluate_loop(model)
 
             self.callback_handler.on_epoch_end(
                 self.args, self.state,
                 metrics=metrics,
-                train_loss=train_loss,
+                train_loss=avg_train_loss,
                 lr=self.optimizer.lr,
                 test_true=test_true,
-                test_pred=test_pred
+                test_pred=test_pred,
             )
             
             # Save checkpoint periodically

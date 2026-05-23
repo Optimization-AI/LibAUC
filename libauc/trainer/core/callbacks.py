@@ -1,6 +1,6 @@
 import logging
 import sys
-from typing import Any, Dict, List, Optional
+from typing import List
 
 from ..config.args import TrainingArguments
 
@@ -27,7 +27,7 @@ class TrainerCallback:
     :class:`~trainer.core.callbacks.CallbackHandler`, which calls each hook in
     registration order and forwards a consistent set of keyword arguments
     (``model``, ``optimizer``, ``loss_fn``, plus any extra kwargs the
-    :class:`~trainer.core.trainer.Trainer` supplies for that event).
+    :class:`~trainer.core.image_trainer.Trainer` supplies for that event).
 
     Lifecycle order during a typical training run::
 
@@ -44,69 +44,61 @@ class TrainerCallback:
         on_train_end
 
     All callback methods are optional and can be overridden in subclasses.
-
-    Example::
-
-        >>> class MyCallback(TrainerCallback):
-        ...     def on_epoch_end(self, args, state, **kwargs):
-        ...         print(f"Epoch {state.epoch} done, loss={kwargs['train_loss']:.4f}")
-        ...
-        >>> trainer = Trainer(..., callbacks=[MyCallback()])
     """
     
     def __init__(self) -> None:
         pass
     
     def on_init_end(self, args: TrainingArguments, state: TrainerState, **kwargs):
-        """Event called at the end of trainer initialization."""
+        """Called at the end of trainer initialization. No-op in base class."""
         pass
 
     def on_train_begin(self, args: TrainingArguments, state: TrainerState, **kwargs):
-        """Event called at the beginning of training."""
+        """Called once before the first epoch. No-op in base class."""
         pass
 
     def on_train_end(self, args: TrainingArguments, state: TrainerState, **kwargs):
-        """Event called at the end of training."""
+        """Called once after the last epoch. No-op in base class."""
         pass
 
     def on_epoch_begin(self, args: TrainingArguments, state: TrainerState, **kwargs):
-        """Event called at the beginning of an epoch."""
+        """Called at the start of each epoch. No-op in base class."""
         pass
 
     def on_epoch_end(self, args: TrainingArguments, state: TrainerState, **kwargs):
-        """Event called at the end of an epoch."""
+        """Called at the end of each epoch. No-op in base class."""
         pass
 
     def on_step_begin(self, args: TrainingArguments, state: TrainerState, **kwargs):
-        """Event called at the beginning of a training step."""
+        """Called before each optimizer step. No-op in base class."""
         pass
 
     def on_substep_end(self, args: TrainingArguments, state: TrainerState, **kwargs):
-        """Event called at the end of a substep during gradient accumulation."""
+        """Called after each gradient-accumulation sub-step. No-op in base class."""
         pass
 
     def on_step_end(self, args: TrainingArguments, state: TrainerState, **kwargs):
-        """Event called at the end of a training step."""
+        """Called after each optimizer step. No-op in base class."""
         pass
 
     def on_evaluate(self, args: TrainingArguments, state: TrainerState, **kwargs):
-        """Event called after an evaluation phase."""
+        """Called after each evaluation pass. No-op in base class."""
         pass
 
     def on_predict(self, args: TrainingArguments, state: TrainerState, metrics, **kwargs):
-        """Event called after a successful prediction."""
+        """Called after a prediction pass. No-op in base class."""
         pass
 
     def on_save(self, args: TrainingArguments, state: TrainerState, **kwargs):
-        """Event called after a checkpoint save."""
+        """Called after a checkpoint is saved. No-op in base class."""
         pass
 
     def on_log(self, args: TrainingArguments, state: TrainerState, **kwargs):
-        """Event called after logging the last logs."""
+        """Called after metrics are logged. No-op in base class."""
         pass
 
     def on_prediction_step(self, args: TrainingArguments, state: TrainerState, **kwargs):
-        """Event called after a prediction step."""
+        """Called after each prediction step. No-op in base class."""
         pass
 
 
@@ -121,18 +113,9 @@ class CallbackHandler(TrainerCallback):
 
     Args:
         callbacks (list[TrainerCallback]): Initial callback list.
-        model: The model being trained (forwarded to every callback via
-            ``kwargs["model"]``).
-        optimizer: The active optimizer (forwarded via ``kwargs["optimizer"]``).
-        loss_fn: The active loss function (forwarded via ``kwargs["loss_fn"]``).
-
-    Example::
-
-        >>> handler = CallbackHandler(
-        ...     [CLICallback()],
-        ...     model=model, optimizer=optimizer, loss_fn=loss_fn,
-        ... )
-        >>> handler.on_train_begin(args, state)
+        model: The model being trained.
+        optimizer: The active optimizer.
+        loss_fn: The active loss function.
     """
     
     def __init__(self, callbacks: List[TrainerCallback], model, optimizer, loss_fn):
@@ -222,7 +205,14 @@ class CallbackHandler(TrainerCallback):
         return self._call_event("on_prediction_step", args, state)
 
     def _call_event(self, event, args, state, **kwargs):
-        """Call the specified event on all callbacks."""
+        """Invoke *event* on every registered callback in order.
+
+        ``model``, ``optimizer``, and ``loss_fn`` are always injected into
+        ``**kwargs`` so every callback receives them as ``kwargs["model"]``,
+        ``kwargs["optimizer"]``, and ``kwargs["loss_fn"]`` regardless of what
+        the caller passes.  Any additional keyword arguments from the caller
+        are merged in after.
+        """
         for callback in self.callbacks:
             result = getattr(callback, event)(
                 args,
@@ -232,30 +222,6 @@ class CallbackHandler(TrainerCallback):
                 loss_fn=self.loss_fn,
                 **kwargs,
             )
-
-
-class DefaultCallback(TrainerCallback):
-    """Default callback with basic functionality."""
-    
-    def __init__(self) -> None:
-        super().__init__()
-    
-    def on_epoch_begin(self, args: TrainingArguments, state: TrainerState, **kwargs):
-        """Event called at the beginning of an epoch."""
-        optimizer = kwargs.get("optimizer")
-        if optimizer and state.epoch in args.decay_epochs:
-            if getattr(optimizer, "model_ref", None) is not None:
-                optimizer.update_regularizer(decay_factor=10)
-            else:
-                optimizer.update_lr(decay_factor=10)
-
-    def on_epoch_end(self, args: TrainingArguments, state: TrainerState, **kwargs):
-        """Event called at the end of an epoch."""
-        state.epoch += 1
-
-    def on_step_end(self, args: TrainingArguments, state: TrainerState, **kwargs):
-        """Event called at the end of a training step."""
-        state.step += 1
 
 
 def _format_metrics(log: dict, skip_keys: tuple = ("epoch", "train_loss", "lr")) -> str:
@@ -315,22 +281,14 @@ class CLICallback(TrainerCallback):
     On ``on_train_end`` it prints a training summary (best validation and test
     scores) and calls ``wandb.finish()``.
 
-    Args:
-        (none — all configuration is read from :class:`~trainer.config.args.TrainingArguments`
-        at runtime)
+    .. note::
+        This callback takes no constructor arguments.  All configuration is
+        read from :class:`~libauc.trainer.config.args.TrainingArguments` at
+        runtime via the ``args`` parameter passed to each lifecycle hook.
 
     Note:
         W&B logging is silently disabled when ``wandb`` is not installed or
         when ``wandb.log`` raises an exception.
-
-    Example::
-
-        >>> trainer = Trainer(..., callbacks=[CLICallback()])
-        >>> trainer.train()
-        ============================================================
-        {'batch_size': 128, 'epochs': 50, ...}
-        ============================================================
-        Epoch [██████████████████············] 20/50 | Loss: 0.3241 | AUROC: 0.8712 | LR: 0.100000
     """
 
     # Width of the progress bar fill (verbose=1)
@@ -368,9 +326,21 @@ class CLICallback(TrainerCallback):
         )
 
     # ------------------------------------------------------------------
-    # Callback events
+    # Callback events — what each hook does in CLICallback
     # ------------------------------------------------------------------
     def on_train_begin(self, args: TrainingArguments, state: TrainerState, **kwargs):
+        """Initialise W&B and print the training config.
+
+        Attempts to start a W&B run using ``args.project_name`` and
+        ``args.experiment_name`` with the full ``TrainingArguments`` dict as
+        the run config.  If ``wandb`` is not installed the run is silently
+        skipped and ``self._use_wandb`` is set to ``False`` so all subsequent
+        W&B calls are no-ops.
+
+        When ``args.verbose != 0``, pretty-prints the resolved config between
+        two ``====`` separator lines so the user can confirm all hyperparameters
+        before training starts.
+        """
         try:
             import wandb
             config = {
@@ -394,7 +364,11 @@ class CLICallback(TrainerCallback):
         print("=" * 60)
 
     def on_epoch_begin(self, args: TrainingArguments, state: TrainerState, **kwargs):
-        """Event called at the beginning of an epoch."""
+        """Apply learning-rate / regulariser decay if the epoch is scheduled.
+
+        Checks whether ``state.epoch`` is listed in ``args.decay_epochs``.
+        If so, decays by a fixed factor of 10:
+        """
         optimizer = kwargs.get("optimizer")
         if optimizer and state.epoch in args.decay_epochs:
             if getattr(optimizer, "model_ref", None) is not None:
@@ -403,7 +377,24 @@ class CLICallback(TrainerCallback):
                 optimizer.update_lr(decay_factor=10)
 
     def on_epoch_end(self, args: TrainingArguments, state: TrainerState, **kwargs):
-        """Event called at the end of an epoch."""
+        """Record metrics, update the console display, and log to W&B.
+
+        1. **Appends** a structured record ``{metrics, epoch, lr, train_loss}``
+           to ``state.train_log`` for later retrieval (e.g. by ``on_train_end``).
+        2. **Console output** (controlled by ``args.verbose``):
+
+           * ``verbose=1`` — overwrites a single progress-bar line in place
+             using ``\\r``, showing a block-character bar, loss, all eval
+             metrics, and the current LR.  A newline is printed only on the
+             final epoch so the bar persists after training.
+           * ``verbose=2`` — prints one pipe-separated line per epoch
+             (``Epoch N/T | Loss: X | AUROC: Y | LR: Z``).
+           * ``verbose=0`` — no console output.
+
+        3. **W&B** — ships the flat log dict to ``wandb.log`` (no-op if W&B
+           is unavailable).
+        4. **Increments** ``state.epoch``.
+        """
         metrics:    list  = kwargs.get("metrics", [])
         train_loss: float = kwargs.get("train_loss", 0)
         lr:         float = kwargs.get("lr", 0)
@@ -449,7 +440,19 @@ class CLICallback(TrainerCallback):
         state.epoch += 1
 
     def on_train_end(self, args: TrainingArguments, state: TrainerState, **kwargs):
-        """Event called at the end of training."""
+        """Print a training summary and close the W&B run.
+
+        1. Prints a ``"Training complete."`` separator when ``verbose != 0``.
+        2. Calls ``wandb.finish()`` to flush and close the W&B run.
+        3. Scans ``state.train_log`` to find the best epoch (highest value of
+           the first metric on the first eval split) and reports:
+
+           * **1 eval split** — best validation score.
+           * **2+ eval splits** — best validation score + average of all
+             remaining test split scores at that epoch.
+
+        4. Stores the summary dict under ``state.train_summary``.
+        """
         if args.verbose != 0:
             print("-" * 50)
             print("Training complete.")
@@ -465,27 +468,24 @@ class CLICallback(TrainerCallback):
         if not train_log:
             raise ValueError("Training should have at least one evaluation record.")
 
+        # No eval datasets registered — nothing to summarise.
+        if not train_log[0]['metrics']:
+            logger.info("No evaluation datasets registered; skipping training summary.")
+            return
+
         train_summary = {}
         target    = list(train_log[0]['metrics'][0].keys())[0]
-        id        = max(range(len(train_log)), key=lambda i: train_log[i]['metrics'][0][target])
+        best_idx  = max(range(len(train_log)), key=lambda i: train_log[i]['metrics'][0][target])
         num_evals = len(train_log[0]['metrics'])
 
-        if num_evals == 0:
-            raise ValueError("Evaluation should contain at least one dataset split.")
-        elif num_evals == 1:
-            val = train_log[id]['metrics'][0][target]
+        if num_evals == 1:
+            val = train_log[best_idx]['metrics'][0][target]
             logger.info(f"best validation {target}: {val}")
             train_summary["val"] = val
-        elif num_evals == 2:
-            val   = train_log[id]['metrics'][0][target]
-            score = train_log[id]['metrics'][1][target]
-            logger.info(f"best validation {target}: {val}, best test {target}: {score}")
-            train_summary["val"]  = val
-            train_summary["test"] = score
         else:
-            val   = train_log[id]['metrics'][0][target]
+            val   = train_log[best_idx]['metrics'][0][target]
             score = sum(
-                train_log[id]['metrics'][x][target] for x in range(1, num_evals)
+                train_log[best_idx]['metrics'][x][target] for x in range(1, num_evals)
             ) / (num_evals - 1)
             logger.info(f"best validation {target}: {val}, best test avg. {target}: {score}")
             train_summary["val"]  = val
@@ -494,5 +494,9 @@ class CLICallback(TrainerCallback):
         state.train_summary = train_summary
 
     def on_step_end(self, args: TrainingArguments, state: TrainerState, **kwargs):
-        """Event called at the end of a training step."""
+        """Increment the global step counter.
+
+        Increments ``state.step`` by 1 after every optimizer update, keeping a
+        running total of training steps across all epochs.
+        """
         state.step += 1
