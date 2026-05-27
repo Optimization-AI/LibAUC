@@ -1,0 +1,59 @@
+# ----------------------------------------------------------
+# Dataset
+# ----------------------------------------------------------
+dataset:
+  name: cifar10
+  eval_splits: [val, test]
+  kwargs:
+    imratio: 0.1
+
+# ----------------------------------------------------------
+# Model
+# ----------------------------------------------------------
+model:
+  name: resnet20
+  pretrained: false
+
+# ----------------------------------------------------------
+# Evaluation metrics
+# ----------------------------------------------------------
+metrics:
+  - AUROC
+
+# ----------------------------------------------------------
+# Training
+# ----------------------------------------------------------
+training:
+  # --- Experiment tracking ---
+  project_name: libauc
+  experiment_name: resnet20_CompositionalAUCLoss_cifar10
+  
+  # --- Core hyperparameters ---
+  epochs: 100
+  batch_size: 128
+  eval_batch_size: 256
+  sampling_rate: 0.2
+  num_workers: 0
+  SEED: 123
+
+  # --- Loss function ---
+  loss: CompositionalAUCLoss
+  loss_kwargs:
+    margin: 1.0
+    k: 1
+
+  # --- Optimizer ---
+  optimizer: PDSCA
+  optimizer_kwargs:
+    lr: 0.1
+    beta1: 0.9
+    beta2: 0.9
+    epoch_decay: 2.0e-3
+    weight_decay: 1.0e-4
+
+  decay_epochs: [0.5, 0.75]
+
+  # --- Checkpointing ---
+  output_path: ./output
+  resume_from_checkpoint: false
+  save_checkpoint_every: 10

@@ -1,0 +1,65 @@
+# ----------------------------------------------------------
+# Dataset
+# ----------------------------------------------------------
+dataset:
+  name: ogbg-molhiv
+  eval_splits: [val, test]
+  kwargs: {}
+
+# ----------------------------------------------------------
+# Model
+# ----------------------------------------------------------
+model:
+  name: gine
+  num_tasks: 1
+  emb_dim: 300
+  num_layers: 5
+  dropout: 0.5
+  jk: last
+  norm: BatchNorm
+  pretrained: true
+  pretrained_path: "./output/gine_ce_molhiv/epoch_60.pt"
+
+# ----------------------------------------------------------
+# Evaluation metrics
+# ----------------------------------------------------------
+metrics:
+  - AUPRC
+
+# ----------------------------------------------------------
+# Training
+# ----------------------------------------------------------
+training:
+  # --- Experiment tracking ---
+  project_name: libauc_gnn
+  experiment_name: gine_APLoss_molhiv
+
+  # --- Core hyperparameters ---
+  epochs: 60
+  batch_size: 64
+  eval_batch_size: 64
+  sampling_rate: 0.5
+  num_workers: 2
+  SEED: 2023
+
+  # --- Loss function ---
+  loss: APLoss
+  loss_kwargs:
+    margin: 0.6
+    gamma: 0.1
+
+  # --- Optimizer ---
+  optimizer: SOAP
+  optimizer_kwargs:
+    lr: 1.0e-3
+    weight_decay: 1.0e-5
+
+  # --- LR decay ---
+  decay_epochs: [30, 45]
+  decay_factor: 10.0
+
+  # --- Checkpointing ---
+  output_path: ./output
+  resume_from_checkpoint: false
+  save_checkpoint_every: 5
+  verbose: 1

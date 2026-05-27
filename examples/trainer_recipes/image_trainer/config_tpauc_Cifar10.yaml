@@ -1,0 +1,63 @@
+# ----------------------------------------------------------
+# Dataset
+# ----------------------------------------------------------
+dataset:
+  name: cifar10
+  eval_splits: [val, test]
+  kwargs:
+    imratio: 0.2
+
+# ----------------------------------------------------------
+# Model
+# ----------------------------------------------------------
+model:
+  name: resnet18
+  pretrained: true
+  pretrained_path: "./output/resnet18_ce_cifar10/epoch_100.pt"
+
+# ----------------------------------------------------------
+# Evaluation metrics
+# ----------------------------------------------------------
+metrics:
+  - AUROC
+metric_kwargs:
+  - max_fpr: 0.3
+    min_tpr: 0.7
+
+# ----------------------------------------------------------
+# Training
+# ----------------------------------------------------------
+training:
+  # --- Experiment tracking ---
+  project_name: libauc
+  experiment_name: resnet18_tpAUCLoss_cifar10
+  
+  # --- Core hyperparameters ---
+  epochs: 60
+  batch_size: 128
+  eval_batch_size: 256
+  sampling_rate: 0.5
+  num_workers: 0
+  SEED: 2023
+
+  # --- Loss function ---
+  loss: pAUCLoss
+  loss_kwargs:
+    Lambda: 0.5
+    tau: 1.0
+    gammas: [0.5, 0.5]
+    mode: 2w
+
+  # --- Optimizer ---
+  optimizer: SOTAs
+  optimizer_kwargs:
+    lr: 1.0e-3
+    mode: adam
+    weight_decay: 2.0e-4
+
+  decay_epochs: [30, 45]
+
+  # --- Checkpointing ---
+  output_path: ./output
+  resume_from_checkpoint: false
+  save_checkpoint_every: 10

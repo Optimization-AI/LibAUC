@@ -1,0 +1,57 @@
+# ----------------------------------------------------------
+# Dataset
+# ----------------------------------------------------------
+dataset:
+  name: PneumoniaMNIST
+  eval_splits: [val, test]
+
+# ----------------------------------------------------------
+# Model
+# ----------------------------------------------------------
+model:
+  name: resnet18
+  pretrained: true
+  pretrained_path: "./output/resnet18_ce_PneumoniaMNIST/epoch_60.pt"
+
+# ----------------------------------------------------------
+# Evaluation metrics
+# ----------------------------------------------------------
+metrics:
+  - AUROC
+
+# ----------------------------------------------------------
+# Training
+# ----------------------------------------------------------
+training:
+  # --- Experiment tracking ---
+  project_name: libauc
+  experiment_name: resnet18_AUCMLoss_PneumoniaMNIST
+  
+  # --- Core hyperparameters ---
+  epochs: 60
+  batch_size: 128
+  eval_batch_size: 256
+  sampling_rate: 0.2
+  num_workers: 0
+  SEED: 123
+
+  # --- Loss function ---
+  loss: AUCMLoss
+  loss_kwargs:
+    margin: 1.0
+
+  # --- Optimizer ---
+  optimizer: PESG
+  optimizer_kwargs:
+    lr: 0.1
+    weight_decay: 1.0e-5
+    epoch_decay: 3.0e-3
+    momentum: 0.9
+
+  # --- LR decay ---
+  decay_epochs: [0.5, 0.75]
+
+  # --- Checkpointing ---
+  output_path: ./output
+  resume_from_checkpoint: false
+  save_checkpoint_every: 10

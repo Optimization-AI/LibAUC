@@ -1,0 +1,59 @@
+# ----------------------------------------------------------
+# Dataset
+# ----------------------------------------------------------
+dataset:
+  name: ddsm
+  eval_splits: [val, test]
+  kwargs:
+    image_size: 224
+
+# ----------------------------------------------------------
+# Model
+# ----------------------------------------------------------
+model:
+  name: densenet121
+  pretrained_remote: true   # load ImageNet weights
+
+# ----------------------------------------------------------
+# Evaluation metrics
+# ----------------------------------------------------------
+metrics:
+  - AUROC
+
+# ----------------------------------------------------------
+# Training
+# ----------------------------------------------------------
+training:
+  # --- Experiment tracking ---
+  project_name: libauc
+  experiment_name: densenet121_AUCMLoss_ddsm
+
+  # --- Core hyperparameters ---
+  epochs: 60
+  batch_size: 32
+  eval_batch_size: 64
+  sampling_rate: 0.2
+  num_workers: 2
+  SEED: 2023
+
+  # --- Loss function ---
+  loss: AUCMLoss
+  loss_kwargs:
+    margin: 1.0
+
+  # --- Optimizer ---
+  optimizer: PESG
+  optimizer_kwargs:
+    lr: 0.1
+    epoch_decay: 3.0e-3
+    weight_decay: 1.0e-5
+    momentum: 0.9
+
+  # --- LR decay ---
+  decay_epochs: [0.5, 0.75]
+
+  # --- Checkpointing ---
+  output_path: ./output
+  resume_from_checkpoint: false
+  save_checkpoint_every: 10
+  verbose: 1
