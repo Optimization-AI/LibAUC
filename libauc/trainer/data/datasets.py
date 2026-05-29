@@ -433,6 +433,9 @@ def load_dataset(name: str, splits: list, **kwargs):
         return train_dataset, eval_datasets
 
     elif name == "melanoma":
+        # Download dataset from Kaggle before use:
+        #   https://www.kaggle.com/cdeotte/jpeg-melanoma-256x256
+        # Place the extracted contents under <root_path>/melanoma/
         from libauc.datasets import Melanoma
 
         root          = os.path.join(root_path, "melanoma")
@@ -450,6 +453,9 @@ def load_dataset(name: str, splits: list, **kwargs):
         return train_dataset, eval_datasets
 
     elif name == "ddsm":
+        # Download dataset from Kaggle before use:
+        #   https://www.kaggle.com/datasets/awsaf49/cbis-ddsm-breast-cancer-image-dataset
+        # Place the extracted contents under <root_path>/ddsm/ with subdirs csv/ and jpeg/
         from sklearn.model_selection import train_test_split
 
         root     = os.path.join(root_path, "ddsm")
