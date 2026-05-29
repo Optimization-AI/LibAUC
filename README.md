@@ -33,7 +33,7 @@ LibAUC: A Deep Learning Library for X-Risk Optimization
 
 News
 --- 
-- [5/29/2026]:<b style="color:red;">New Version is Available:</b>  LibAUC 2.0 Released: We are excited to announce the release of LibAUC 2.0, featuring the new LibAUC Trainer, distributed training support for all optimizers, integration with Hugging Face models, new optimizers for extreme classification and two-way partial AUC optimization, expanded tutorials, and improved support for resume training. For full details, please see the latest [release notes](https://github.com/Optimization-AI/LibAUC/releases/).
+- [5/29/2026]:**🚨 New Version is Available:**  LibAUC 2.0 Released: We are excited to announce the release of LibAUC 2.0, featuring the new LibAUC Trainer, distributed training support for all optimizers, integration with Hugging Face models, new optimizers for extreme classification and two-way partial AUC optimization, expanded tutorials, and improved support for resume training. For full details, please see the latest [release notes](https://github.com/Optimization-AI/LibAUC/releases/).
 	
 - [8/14/2024]: **New Version is Available:**  We are releasing LibAUC 1.4.0. We offer new optimizers/losses/models and have improved some existing optimizers. For more details, please check the latest [release note](https://github.com/Optimization-AI/LibAUC/releases/).
   
