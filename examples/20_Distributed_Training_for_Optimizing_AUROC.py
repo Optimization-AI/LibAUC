@@ -18,8 +18,8 @@ from torch.utils.data import Dataset
 import os
 
 
-dist.init_process_group("nccl")
 local_rank = int(os.environ.get("LOCAL_RANK", 0))
+dist.init_process_group("nccl", device_id=local_rank)
 world_size = dist.get_world_size()
 device = torch.device("cuda", local_rank)
 

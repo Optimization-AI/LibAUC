@@ -18,8 +18,8 @@ from libauc.metrics.metrics_k import ndcg_at_k
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-dist.init_process_group("nccl")
 local_rank = int(os.environ.get("LOCAL_RANK", 0))
+dist.init_process_group("nccl", device_id=local_rank)
 world_size = dist.get_world_size()
 device = torch.device("cuda", local_rank)
 

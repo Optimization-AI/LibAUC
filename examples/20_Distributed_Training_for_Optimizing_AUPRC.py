@@ -18,8 +18,8 @@ from torch.utils.data import Dataset
 import os
 
 
-dist.init_process_group("nccl")
 local_rank = int(os.environ.get("LOCAL_RANK", 0))
+dist.init_process_group("nccl", device_id=local_rank)
 world_size = dist.get_world_size()
 device = torch.device("cuda", local_rank)
 
@@ -133,7 +133,7 @@ imratio = 0.02  ## we set the imratio as 0.02 here since AP metric is usually us
 train_data, train_targets = CIFAR10(root='./data', train=True).as_array()
 test_data, test_targets  = CIFAR10(root='./data', train=False).as_array()
 
-generator = ImbalancedDataGenerator(verbose=True, random_seed=2025)
+generator = ImbalancedDataGenerator(verbose=True, random_seed=2026)
 (train_images, train_labels) = generator.transform(train_data, train_targets, imratio=imratio)
 (test_images, test_labels) = generator.transform(test_data, test_targets, imratio=0.5)
     
