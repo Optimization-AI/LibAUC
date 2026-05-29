@@ -153,4 +153,4 @@ If you find LibAUC useful in your work, please cite the following papers:
 
 Contact
 ----------
-For any technical questions, please open a new issue in the Github. If you have any other questions, please contact us via libaucx@gmail.com  or tianbao-yang@tamu.edu. 
+For any technical questions, please open a new issue in the Github. If you have any other questions, please contact us via tianbao-yang@tamu.edu. 
