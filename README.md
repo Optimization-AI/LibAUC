@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://docs.libauc.org/_images/libauc_new_logo_v5.png" width="70%" align="center"/><br>
+  <img src="imgs/libauc-new-logo.png" width="70%" align="center"/><br>
 </p>
 
 
@@ -26,13 +26,14 @@ LibAUC: A Deep Learning Library for X-Risk Optimization
 | [**Documentation**](https://docs.libauc.org/)
 | [**Installation**](https://libauc.org/installation/)
 | [**Website**](https://libauc.org/)
-| [**Tutorial**](https://docs.libauc.org/)
+| [**Tutorial**](https://github.com/Optimization-AI/LibAUC/tree/main/examples)
 | [**Research**](https://libauc.org/publications/)
 | [**Github**](https://github.com/Optimization-AI/LibAUC/) |
 
 
 News
 --- 
+- [5/29/2026]:**🚨 New Version is Available:**  LibAUC 2.0 Released: We are excited to announce the release of LibAUC 2.0, featuring the new LibAUC Trainer, distributed training support for all optimizers, integration with Hugging Face models, new optimizers for extreme classification and two-way partial AUC optimization, expanded tutorials, and improved support for resume training. For full details, please see the latest [release notes](https://github.com/Optimization-AI/LibAUC/releases/).
 	
 - [8/14/2024]: **New Version is Available:**  We are releasing LibAUC 1.4.0. We offer new optimizers/losses/models and have improved some existing optimizers. For more details, please check the latest [release note](https://github.com/Optimization-AI/LibAUC/releases/).
   
@@ -102,7 +103,10 @@ Usage
 Tutorials
 -------
 ### X-Risk Minimization
-
+- **Using LibAUC Trainer**: [[example]](https://docs.libauc.org/examples/libauc_trainer.html)
+- **Distributed training**: [[example]](https://docs.libauc.org/examples/dist_train.html)
+- **Optimizing CE loss for Extreme Classification:** [[example]](https://docs.libauc.org/examples/scent_extreme_classification.html)
+- **FastCLIP**: [[example]](https://docs.libauc.org/examples/fastclip.html)
 - **Optimizing AUCMLoss**: [[example]](https://docs.libauc.org/examples/auroc.html)
 - **Optimizing APLoss**: [[example]](https://docs.libauc.org/examples/auprc.html)
 - **Optimizing CompositionalAUCLoss**: [[example]](https://docs.libauc.org/examples/compauc.html)
@@ -149,4 +153,4 @@ If you find LibAUC useful in your work, please cite the following papers:
 
 Contact
 ----------
-For any technical questions, please open a new issue in the Github. If you have any other questions, please contact us via libaucx@gmail.com  or tianbao-yang@tamu.edu. 
+For any technical questions, please open a new issue in the Github. If you have any other questions, please contact us via tianbao-yang@tamu.edu. 
