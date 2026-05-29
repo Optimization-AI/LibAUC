@@ -106,7 +106,7 @@ Tutorials
 - **Using LibAUC Trainer**: [[example]](https://docs.libauc.org/examples/libauc_trainer.html)
 - **Distributed training**: [[example]](https://docs.libauc.org/examples/dist_train.html)
 - **Optimizing CE loss for Extreme Classification:** [[example]](https://docs.libauc.org/examples/scent_extreme_classification.html)
-- **FastCLIP**: [[example]](https://docs.libauc.org/examples/scent_extreme_classification.html](https://docs.libauc.org/examples/fastclip.html)
+- **FastCLIP**: [[example]](https://docs.libauc.org/examples/fastclip.html)
 - **Optimizing AUCMLoss**: [[example]](https://docs.libauc.org/examples/auroc.html)
 - **Optimizing APLoss**: [[example]](https://docs.libauc.org/examples/auprc.html)
 - **Optimizing CompositionalAUCLoss**: [[example]](https://docs.libauc.org/examples/compauc.html)
