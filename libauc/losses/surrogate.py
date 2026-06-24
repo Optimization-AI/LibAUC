@@ -75,13 +75,15 @@ def get_surrogate_loss(loss_name='squared_hinge'):
         A wrapper to call a specific surrogate loss function.
     
         Args:
-            loss_name (str): type of surrogate loss function to fetch, including 'squared_hinge', 'squared', 'logistic', 'barrier_hinge' (default: ``'squared_hinge'``).
+            loss_name (str): type of surrogate loss function to fetch, including 'squared_hinge', 'squared', 'hinge', 'logistic', 'barrier_hinge' (default: ``'squared_hinge'``).
     """
     assert f'{loss_name}_loss' in __all__, f'{loss_name} is not implemented'
     if loss_name == 'squared_hinge':
        surr_loss = squared_hinge_loss
     elif loss_name == 'squared':
        surr_loss = squared_loss
+    elif loss_name == 'hinge':
+       surr_loss = hinge_loss
     elif loss_name == 'logistic':
        surr_loss = logistic_loss
     elif loss_name == 'barrier_hinge':
