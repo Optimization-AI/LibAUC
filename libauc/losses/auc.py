@@ -885,8 +885,8 @@ class PairwiseAUCLoss(torch.nn.Module):
         pos_mask = (y_true == 1).squeeze() 
         neg_mask = (y_true == 0).squeeze() 
         assert sum(pos_mask) > 0, "Input data has no positive sample! Please use 'libauc.sampler.DualSampler' for data resampling!"
-        f_ps = y_pred[pos_mask]
-        f_ns = y_pred[neg_mask].squeeze()
+        f_ps = y_pred[pos_mask].unsqueeze(1)
+        f_ns = y_pred[neg_mask].unsqueeze(0)
         loss = self.surrogate_loss(self.hparam, f_ps - f_ns)  
         return loss.mean()
 
