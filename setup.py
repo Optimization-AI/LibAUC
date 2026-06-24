@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
   name="libauc",
-  version="1.4.0",
+  version="2.0.1",
   author="Zhuoning Yuan, Tianbao Yang",
   description="LibAUC: A Deep Learning Library for X-Risk Optimization",
   long_description=long_description,
@@ -30,5 +30,9 @@ setuptools.setup(
                       'opencv-python',
                       'torch_geometric',
                       'ogb',
-                      'webdataset']
+                      'webdataset',
+                      'omegaconf',
+                      'transformers',
+                      'medmnist',
+                      'pyyaml']
 )
