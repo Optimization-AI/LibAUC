@@ -119,8 +119,8 @@ class AUCMLoss(torch.nn.Module):
             if unexpected:
                 raise RuntimeError(f"Unexpected keys in state_dict: {unexpected}")
 
-    def mean(self, tensor):
-        return torch.sum(tensor)/torch.count_nonzero(tensor)
+    def mean(self, tensor, mask):
+        return torch.sum(tensor * mask) / torch.sum(mask)
 
     def forward(self, y_pred, y_true, auto=True, **kwargs):
         y_pred = check_tensor_shape(y_pred, (-1, 1))
@@ -140,10 +140,10 @@ class AUCMLoss(torch.nn.Module):
                     torch.mean((self.p*y_pred*(0==y_true).float() - (1-self.p)*y_pred*(1==y_true).float())) )- \
                     self.p*(1-self.p)*self.alpha**2
         else:
-            loss = self.mean((y_pred - self.a)**2*pos_mask) + \
-                   self.mean((y_pred - self.b)**2*neg_mask) + \
+            loss = self.mean((y_pred - self.a)**2, pos_mask) + \
+                   self.mean((y_pred - self.b)**2, neg_mask) + \
                         2*self.alpha*(self.margin + \
-                        self.mean((y_pred*neg_mask) - self.mean(y_pred*pos_mask)) )- \
+                        self.mean(y_pred, neg_mask) - self.mean(y_pred, pos_mask) )- \
                         self.alpha**2
         return loss
 
@@ -240,8 +240,8 @@ class CompositionalAUCLoss(torch.nn.Module):
                 raise RuntimeError(f"Unexpected keys in state_dict: {unexpected}")
         
  
-    def mean(self, tensor):
-        return torch.sum(tensor)/torch.count_nonzero(tensor)
+    def mean(self, tensor, mask):
+        return torch.sum(tensor * mask) / torch.sum(mask)
 
     def forward(self, y_pred, y_true, k=None, auto=True, **kwargs):
         y_pred = check_tensor_shape(y_pred, (-1, 1))
@@ -265,10 +265,10 @@ class CompositionalAUCLoss(torch.nn.Module):
             else:
                 pos_mask = (1==y_true).float()
                 neg_mask = (0==y_true).float()
-                self.L_AUC = self.mean((y_pred - self.a)**2*pos_mask) + \
-                             self.mean((y_pred - self.b)**2*neg_mask) + \
+                self.L_AUC = self.mean((y_pred - self.a)**2, pos_mask) + \
+                             self.mean((y_pred - self.b)**2, neg_mask) + \
                              2*self.alpha*(self.margin + \
-                             self.mean((y_pred*neg_mask) - self.mean(y_pred*pos_mask)) ) - \
+                             self.mean(y_pred, neg_mask) - self.mean(y_pred, pos_mask) ) - \
                              self.alpha**2
             self.step += 1
             return self.L_AUC 
@@ -952,8 +952,8 @@ class MultiLabelAUCMLoss(torch.nn.Module):
     def get_alpha(self):
         return self.alpha.mean()
     
-    def mean(self, tensor):
-        return torch.sum(tensor)/torch.count_nonzero(tensor)
+    def mean(self, tensor, mask):
+        return torch.sum(tensor * mask) / torch.sum(mask)
 
     def forward(self, y_pred, y_true, task_id=[], auto=True, **kwargs):
         total_loss = 0
@@ -972,9 +972,9 @@ class MultiLabelAUCMLoss(torch.nn.Module):
                             torch.mean((self.p[idx]*y_pred_i*(0==y_true_i).float() - (1-self.p[idx])*y_pred_i*(1==y_true_i).float())) )- \
                             self.p[idx]*(1-self.p[idx])*self.alpha[idx]**2
             else:
-                loss = self.mean((y_pred_i - self.a[idx])**2*(1==y_true_i).float()) + \
-                            self.mean((y_pred_i - self.b[idx])**2*(0==y_true_i).float())   + \
-                            2*self.alpha[idx]*(self.margin  + self.mean(y_pred_i*(0==y_true_i).float()) - self.mean(y_pred_i*(1==y_true_i).float()) )- \
+                loss = self.mean((y_pred_i - self.a[idx])**2, (1==y_true_i).float()) + \
+                            self.mean((y_pred_i - self.b[idx])**2, (0==y_true_i).float())   + \
+                            2*self.alpha[idx]*(self.margin  + self.mean(y_pred_i, (0==y_true_i).float()) - self.mean(y_pred_i, (1==y_true_i).float()) )- \
                             self.alpha[idx]**2
             total_loss += loss
         return total_loss/len(task_id)
